@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Buscar"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-mapreduce implements" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/19/mapreduce implements/" class="article-date">
+  <time datetime="2018-01-18T18:06:21.406Z" itemprop="datePublished">2018-01-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="This-is-the-implementation-of-6-824-Lab1-MapReduce"><a href="#This-is-the-implementation-of-6-824-Lab1-MapReduce" class="headerlink" title="This is the implementation of 6.824 Lab1: MapReduce"></a>This is the implementation of 6.824 Lab1: MapReduce</h1><h3 id="Part-1-Map-Reduce-and-output"><a href="#Part-1-Map-Reduce-and-output" class="headerlink" title="Part 1: Map/Reduce and output"></a>Part 1: Map/Reduce and output</h3><ul>
+<li>What you have to do is to finish the two function doMap() and doReduce()</li>
+<li><p>Each call to doMap() reads the appropriate file, calls the map function on that file’s contents, and writes the resulting key/value pairs to nReduce intermediate files. doMap() hashes each key to pick the intermediate file and thus the reduce task that will process the key. There will be nMap x nReduce files after all map tasks are done. Each file name contains a prefix, the map task number, and the reduce task number. If there are two map tasks and three reduce tasks, the map tasks will create these six intermediate files:</p>
+<blockquote>
+<p>mrtmp.xxx-0-0<br>mrtmp.xxx-0-1<br>mrtmp.xxx-0-2<br>mrtmp.xxx-1-0<br>mrtmp.xxx-1-1<br>mrtmp.xxx-1-2</p>
+</blockquote>
+</li>
+<li><p>The MapFunc ode and explanation are below</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">// first read the inFile and trasfer the results to the String</span><br><span class="line">bytes, err := ioutil.ReadFile(inFile)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    log.Fatalf(&quot;err: %s&quot;, err)</span><br><span class="line">&#125;</span><br><span class="line">// in this part mapF() in the test_test.go. It Split the (inFile, bytes) in words, and get []KeyValue</span><br><span class="line">// so we use a new Key structure to store the []KeyValue</span><br><span class="line">kvs := mapF(inFile, string(bytes))</span><br><span class="line">// This is standard use that can transfer the structure into JSON</span><br><span class="line">encoders := make([]*json.Encoder, nReduce);</span><br><span class="line">// for one input file, we need to generate *nReduce* output files for the reduce job</span><br><span class="line">// so in this part we create *nReduce* Encoders, which are stored in the encoders, the</span><br><span class="line">// file name is also generated by the reduceName provided by the MIT</span><br><span class="line">for reduceTaskNumber := 0; reduceTaskNumber &lt; nReduce; reduceTaskNumber++ &#123;</span><br><span class="line">    filename := reduceName(jobName, mapTaskNumber, reduceTaskNumber)</span><br><span class="line">    // Create() 默认权限 0666</span><br><span class="line">    file_ptr, err := os.Create(filename)</span><br><span class="line">    if (err != nil) &#123;</span><br><span class="line">        log.Fatal(&quot;Unable to create file: &quot;, filename)</span><br><span class="line">    &#125;</span><br><span class="line">    defer file_ptr.Close()</span><br><span class="line">    encoders[reduceTaskNumber] = json.NewEncoder(file_ptr);</span><br><span class="line">&#125;</span><br><span class="line">// now what we are going to do is to encode the kv structure into JSON,</span><br><span class="line">// Please Remember the use of it, here we use *&amp;kv*  -- *the pointer* to get the structure</span><br><span class="line">for _, kv := range kvs &#123;</span><br><span class="line">    key := kv.Key</span><br><span class="line">    HashedKey := int(ihash(key) % nReduce)</span><br><span class="line">    err := encoders[HashedKey].Encode(&amp;kv)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        fmt.Println(err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>And another version firstly came to my mind, which is very slow</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// In this version, we put the OpenFile method in the while of range kvs, in this way, we frequently</span><br><span class="line">// openfile, which will cause a lot of time, so the results is not good due to the poor computer, we</span><br><span class="line">// i also see someone&apos;s code is similar as this idea, maybe ther have a *great* computing environment.</span><br><span class="line">for _, kv := range kvs &#123;</span><br><span class="line">    key := kv.Key</span><br><span class="line">    HashedKey := int(ihash(key) % nReduce)</span><br><span class="line">    filename := reduceName(jobName, mapTaskNumber, HashedKey)</span><br><span class="line">    outputFile, _ := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)</span><br><span class="line">    enc := json.NewEncoder(outputFile)</span><br><span class="line">    //err := encoders[HashedKey].Encode(&amp;kv)</span><br><span class="line">    err := enc.Encode(&amp;kv)</span><br><span class="line">    fmt.Println(&quot;writing &quot;, key)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        fmt.Println(err)</span><br><span class="line">    &#125;</span><br><span class="line">    outputFile.Close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>the ReduceFunc code and explanation is below</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">kvMap := make(map[string]([]string))</span><br><span class="line">// file all the intermediate files and transfer the json into kv structure</span><br><span class="line">for mapNumber := 0; mapNumber &lt; nMap; mapNumber++ &#123;</span><br><span class="line">    filename := reduceName(jobName, mapNumber, reduceTaskNumber)</span><br><span class="line">    file, err := os.Open(filename)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        log.Fatal(&quot;err in open  file: %s&quot;, err)</span><br><span class="line">    &#125;</span><br><span class="line">    defer file.Close()</span><br><span class="line">    decoder := json.NewDecoder(file)</span><br><span class="line">    for &#123;</span><br><span class="line">        var kv KeyValue</span><br><span class="line">        if err := decoder.Decode(&amp;kv); err == io.EOF &#123;</span><br><span class="line">            break</span><br><span class="line">        &#125; else if err != nil &#123;</span><br><span class="line">            log.Fatal(err)</span><br><span class="line">        &#125;</span><br><span class="line">        //map append 方法</span><br><span class="line">        kvMap[kv.Key] = append(kvMap[kv.Key], kv.Value)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">// use keys to store all the word in the file, the length is how many words</span><br><span class="line">keys := make([]string, 0, len(kvMap))</span><br><span class="line">for k, _ := range kvMap &#123;</span><br><span class="line">    keys = append(keys, k)</span><br><span class="line">&#125;</span><br><span class="line">// just format, because the map structure is disordered</span><br><span class="line">sort.Strings(keys)</span><br><span class="line">// one reduce function generate one file which store the results of the reduceF</span><br><span class="line">// It is going to be like this: word, 4, hello, 5</span><br><span class="line">newFile , err2:= os.Create(mergeName(jobName, reduceTaskNumber))</span><br><span class="line">if err2 != nil &#123;</span><br><span class="line">    fmt.Println(&quot;reduce merge files: %s cant open &quot;, mergeName(jobName, reduceTaskNumber))</span><br><span class="line">    return</span><br><span class="line">&#125;</span><br><span class="line">enc := json.NewEncoder(newFile)</span><br><span class="line">for _, k := range keys &#123;</span><br><span class="line">    enc.Encode(KeyValue&#123;k, reduceF(k,  kvMap[k])&#125;)</span><br><span class="line">    //fmt.Println(&quot;reduceF results is  %s&quot;)</span><br><span class="line">    //fmt.Println(reduceF(k,  kvMap[k]))</span><br><span class="line">&#125;</span><br><span class="line">// finally don&apos;t forget the Close() if you open a file</span><br><span class="line">defer newFile.Close()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>finally you need run this code to check the correctness.</p>
+</li>
+</ul>
+<blockquote>
+<p>cd 6.824<br>export “GOPATH=$PWD”  # go needs $GOPATH to be set to the project’s working directory<br>cd “$GOPATH/src/mapreduce”<br>go test -run Sequential</p>
+</blockquote>
+<h3 id="Part-2-Single-worker-word-count"><a href="#Part-2-Single-worker-word-count" class="headerlink" title="Part 2 Single-worker word count"></a>Part 2 Single-worker word count</h3><ul>
+<li><p>Now you will implement word count — a simple Map/Reduce example. Look in main/wc.go; you’ll find      empty mapF() and reduceF() functions. Your job is to insert code so that wc.go reports the number of occurrences of each word in its input. A word is any contiguous sequence of letters, as determined by unicode.IsLetter.</p>
+</li>
+<li><p>this mapF function is similar in the test_test.go that we use to split the strings into words</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// the point of this function is the strings.FieldsFunc which can divides the</span><br><span class="line">// string into []string with resect to the unicode.IsLetter</span><br><span class="line">func mapF(filename string, contents string) []mapreduce.KeyValue &#123;</span><br><span class="line">	words := strings.FieldsFunc(contents, func(r rune) bool &#123;</span><br><span class="line">		return !unicode.IsLetter(r)</span><br><span class="line">	&#125;)</span><br><span class="line">	var kv []mapreduce.KeyValue</span><br><span class="line">	// one word is representing 1 time</span><br><span class="line">	for _, word := range words &#123;</span><br><span class="line">		kv = append(kv, mapreduce.KeyValue&#123;Key: word, Value: &quot;1&quot;&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	return kv</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// simply just count the values length</span><br><span class="line">func reduceF(key string, values []string) string &#123;</span><br><span class="line">	return strconv.Itoa(len(values))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>You can test your solution using:</li>
+</ul>
+<blockquote>
+<p>cd “$GOPATH/src/main”<br><code>go run wc.go master sequential pg-*.txt</code></p>
+</blockquote>
+<ul>
+<li>The output will be in the file “mrtmp.wcseq”. Your implementation is correct if the following command produces the output shown here:</li>
+</ul>
+<blockquote>
+<p>sort -n -k2 mrtmp.wcseq | tail -10</p>
+<p>that: 7871<br>it: 7987<br>in: 8415<br>was: 8578<br>a: 13382<br>of: 13536<br>I: 14296<br>to: 16079<br>and: 23612<br>the: 29748</p>
+</blockquote>
+<h3 id="Part-3-Distributing-MapReduce-tasks"><a href="#Part-3-Distributing-MapReduce-tasks" class="headerlink" title="Part 3: Distributing MapReduce tasks"></a>Part 3: Distributing MapReduce tasks</h3><ul>
+<li><p>Your job is to implement schedule() in mapreduce/schedule.go. The master calls schedule() twice during a MapReduce job, once for the Map phase, and once for the Reduce phase. schedule()’s job is to hand out tasks to the available workers. There will usually be more tasks than worker threads, so schedule() must give each worker a sequence of tasks, one at a time. schedule() should wait until all tasks have completed, and then return.</p>
+</li>
+<li><p>schedule() learns about the set of workers by reading its registerChan argument. That channel yields a string for each worker, containing the worker’s RPC address. Some workers may exist before schedule() is called, and some may start while schedule() is running; all will appear on registerChan. schedule() should use all the workers, including ones that appear after it starts.</p>
+</li>
+<li><p>schedule() tells a worker to execute a task by sending a Worker.DoTask RPC to the worker. This RPC’s arguments are defined by DoTaskArgs in mapreduce/common_rpc.go. The File element is only used by Map tasks, and is the name of the file to read; schedule() can find these file names in mapFiles.</p>
+</li>
+<li><p>Use the call() function in mapreduce/common_rpc.go to send an RPC to a worker. The first argument is the the worker’s address, as read from registerChan. The second argument should be “Worker.DoTask”. The third argument should be the DoTaskArgs structure, and the last argument should be nil.</p>
+</li>
+<li><p>In this part you need to know some concepts</p>
+</li>
+</ul>
+<ol>
+<li>RPC package documents the Go RPC package.</li>
+<li>schedule() should send RPCs to the workers in parallel so that the workers can work on tasks concurrently. You will find the go statement useful for this purpose; see Concurrency in Go.<br>schedule() must wait for a worker to finish before it can give it another task. <em>Go routines</em></li>
+<li>You may find <em>Go’s channels</em> useful.<br>You may find <em>sync.WaitGroup</em> useful.</li>
+<li>The easiest way to track down bugs is to insert print state statements (perhaps calling debug() in common.go), collect the output in a file with go test -run TestBasic &gt; out, and then think about whether the output matches your understanding of how your code should behave. The last step (thinking) is the most important.</li>
+</ol>
+<h3 id="Part-4-Handling-worker-failures"><a href="#Part-4-Handling-worker-failures" class="headerlink" title="Part 4: Handling worker failures"></a>Part 4: Handling worker failures</h3><ul>
+<li><p>MapReduce makes this relatively easy because workers don’t have persistent state. If a worker fails, any RPCs that the master issued to that worker will fail (e.g., due to a timeout). Thus, if the master’s RPC to the worker fails, the master should re-assign the task given to the failed worker to another worker.</p>
+</li>
+<li><p>An RPC failure doesn’t necessarily mean that the worker didn’t execute the task; the worker may have executed it but the reply was lost, or the worker may still be executing but the master’s RPC timed out. Thus, it may happen that two workers receive the same task, compute it, and generate output. Two invocations of a map or reduce function are required to generate the same output for a given input (i.e. the map and reduce functions are “functional”), so there won’t be inconsistencies if subsequent processing sometimes reads one output and sometimes the other. In addition, the MapReduce framework ensures that map and reduce function output appears atomically: the output file will either not exist, or will contain the entire output of a single execution of the map or reduce function (the lab code doesn’t actually implement this, but instead only fails workers at the end of a task, so there aren’t concurrent executions of a task).</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">var wait_group sync.WaitGroup</span><br><span class="line">// firstly, we have nTasks, and our job is dividing these tasks into the worker by the call function</span><br><span class="line">for i:=0; i &lt; ntasks; i++ &#123;</span><br><span class="line">    wait_group.Add(1)</span><br><span class="line">    //struct of DoTaskArgs: the information of the job</span><br><span class="line">    var args DoTaskArgs</span><br><span class="line">    args.JobName = jobName</span><br><span class="line">    if phase == mapPhase &#123;</span><br><span class="line">        args.File = mapFiles[i]</span><br><span class="line">    &#125;</span><br><span class="line">    args.Phase = phase</span><br><span class="line">    args.TaskNumber = i</span><br><span class="line">    args.NumOtherPhase = n_other</span><br><span class="line">    reply := ShutdownReply&#123;0&#125;</span><br><span class="line">    // use go routines</span><br><span class="line">    go func ()  &#123;</span><br><span class="line">        defer wait_group.Done()</span><br><span class="line">        // keep runing until success</span><br><span class="line">        for &#123;</span><br><span class="line">            // all the worker is stored in the registerChan channel</span><br><span class="line">            worker := &lt;-registerChan</span><br><span class="line">            //func call(srv string, rpcname string, args interface&#123;&#125;, reply interface&#123;&#125;)</span><br><span class="line">            if (call(worker, &quot;Worker.DoTask&quot;, &amp;args, &amp;reply))&#123;</span><br><span class="line">                go func()&#123;registerChan &lt;- worker&#125; ()</span><br><span class="line">                break</span><br><span class="line">            &#125;</span><br><span class="line">            /*</span><br><span class="line">            // firstly i want to use this form, but it will go wrong when i want to add the</span><br><span class="line">            // else statement. i still don&apos;t know why</span><br><span class="line">            succeeded := call(worker, &quot;Worker.DoTask&quot;, &amp;args, &amp;reply)</span><br><span class="line">            if !succeeded &#123;</span><br><span class="line">                fmt.Println(&quot;RPC call ERROR *****************&quot;)</span><br><span class="line">            &#125;</span><br><span class="line">            else &#123;</span><br><span class="line">                fmt.Println(&quot;finished TaskNumber-&gt;&gt;&gt;&quot;,args.TaskNumber)</span><br><span class="line">            &#125;</span><br><span class="line">            */</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">// the finish</span><br><span class="line">wait_group.Wait()</span><br><span class="line">fmt.Printf(&quot;Schedule: %v phase done\n&quot;, phase)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>use below statement to test your code for the part 3</li>
+</ul>
+<blockquote>
+<p>go test -run TestBasic</p>
+</blockquote>
+<ul>
+<li>use below statement to test your code for the part 4<blockquote>
+<p>go test -run Failure</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Part-5-Inverted-index-generation"><a href="#Part-5-Inverted-index-generation" class="headerlink" title="Part 5: Inverted index generation"></a>Part 5: Inverted index generation</h3><ul>
+<li><p>Inverted indices are widely used in computer science, and are particularly useful in document searching. Broadly speaking, an inverted index is a map from interesting facts about the underlying data, to the original location of that data. For example, in the context of search, it might be a map from keywords to documents that contain those words.</p>
+</li>
+<li><p>We have created a second binary in main/ii.go that is very similar to the wc.go you built earlier. You should modify mapF and reduceF in main/ii.go so that they together produce an inverted index. Running ii.go should output a list of tuples, one per line, in the following format:</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ go run ii.go master sequential pg-*.txt</span><br><span class="line">$ head -n5 mrtmp.iiseq</span><br><span class="line"></span><br><span class="line">A: 8 pg-being_ernest.txt,pg-dorian_gray.txt,pg-frankenstein.txt,pg-grimm.txt,pg-huckleberry_finn.txt,pg-metamorphosis.txt,pg-sherlock_holmes.txt,pg-tom_sawyer.txt</span><br><span class="line">ABOUT: 1 pg-tom_sawyer.txt</span><br><span class="line">ACT: 1 pg-being_ernest.txt</span><br><span class="line">ACTRESS: 1 pg-dorian_gray.txt</span><br><span class="line">ACTUAL: 8 pg-being_ernest.txt,pg-dorian_gray.txt,pg-frankenstein.txt,pg-grimm.txt,pg-huckleberry_finn.txt,pg-metamorphosis.txt,pg-sherlock_holmes.txt,pg-tom_sawyer.txt</span><br></pre></td></tr></table></figure>
+<p>If it is not clear from the listing above, the format is:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">word: #documents documents,sorted,and,separated,by,commas</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><p>the mapF code and explanation are as BELOW:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">// The mapping function is called once for each piece of the input.</span><br><span class="line">// In this framework, the key is the name of the file that is being processed,</span><br><span class="line">// and the value is the file&apos;s contents. The return value should be a slice of</span><br><span class="line">// key/value pairs, each represented by a mapreduce.KeyValue.</span><br><span class="line"></span><br><span class="line">func mapF(document string, value string) (res []mapreduce.KeyValue) &#123;</span><br><span class="line">	// TODO: you should complete this to do the inverted index challenge</span><br><span class="line">	words := strings.FieldsFunc(value, func(r rune) bool &#123;</span><br><span class="line">		return !unicode.IsLetter(r)</span><br><span class="line">	&#125;)</span><br><span class="line">	// use DocMaps structure to store the word, inFile information</span><br><span class="line">	// word, doc1,</span><br><span class="line">	DocMaps := make(map[string]string)</span><br><span class="line">	var kv []mapreduce.KeyValue</span><br><span class="line">	// get the word from the words list and meanwhile we can get rid of the repeat word</span><br><span class="line">	// for this structure repeat word is not the times, it has no other information.</span><br><span class="line">	for _, word := range words &#123;</span><br><span class="line">		DocMaps[word] = document</span><br><span class="line">	&#125;</span><br><span class="line">	for k, docMap := range DocMaps &#123;</span><br><span class="line">		kv = append(kv, mapreduce.KeyValue&#123;k, docMap&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	return kv</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>the reduceF code and explanation are as BELOW:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">// The reduce function is called once for each key generated by Map, with a</span><br><span class="line">// list of that key&apos;s string value (merged across all inputs). The return value</span><br><span class="line">// should be a single output value for that key.</span><br><span class="line"></span><br><span class="line">func reduceF(key string, values []string) string &#123;</span><br><span class="line">	// TODO: you should complete this to do the inverted index challenge</span><br><span class="line">	//return strconv.Itoa(len(values))</span><br><span class="line">	// example doc1</span><br><span class="line">	//example2 doc2</span><br><span class="line">	nDoc := len(values)</span><br><span class="line">	// fisrt, sort, because the map is disordered</span><br><span class="line">	sort.Strings(values)</span><br><span class="line">	// and then put the []string into string</span><br><span class="line">	// be careful with the commas</span><br><span class="line">	resString := strconv.Itoa(nDoc) + &quot; &quot;</span><br><span class="line">	for _, v := range values &#123;</span><br><span class="line">		resString = resString + v + &quot;,&quot;</span><br><span class="line">	&#125;</span><br><span class="line">	lenString := len(resString)-1</span><br><span class="line">	return resString[:lenString]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="conclusion"><a href="#conclusion" class="headerlink" title="conclusion"></a>conclusion</h3><ul>
+<li>Firstly, i have to admit that this lab is quite difficult for me. It took me nearly one<br>week to finish it. I spent a lot of time to know and how to use GO, till now, I still have<br>some confusion about the go routines and the go channel. The structure of the code is awesome.<br>It also took me a long time in understanding the structure of the code, different parts have<br>different functions. But If you let me to create the whole MapReduce structure, I still don’t<br>the confidence to finish it. I start with the window platform, but later, I am stuck in the PRC part. I got a lot of problems in the use of PRC. So I turn to the Ubuntu. finally, I still have some problems in part 2, actually, I think the result is same as the given result, but when I run the test bash, it told me different. And the part 5, the answer is also failed, but I have seen a lot of code from the github, they are the same idea. I have a look of the <code>pg-*.txt</code>, they are different from previous years. So I am not going to figure out what is going wrong. By implementing the MapReduce key part, I have a new look of this useful processing structure. With respect to my own research, I am considering that I can put the Sketches algorithm into the MapReduce computing structre, every node get its own results of the data stream Sketches, and in the end, master node put them together and get a whole sketch of the data stream.</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/01/19/mapreduce implements/" data-id="cjckt5lt500032eoccutg4kkm" class="article-share-link">Compartir</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-DataSketches Research Directions" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/19/DataSketches Research Directions/" class="article-date">
+  <time datetime="2018-01-18T18:05:27.400Z" itemprop="datePublished">2018-01-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="DataSketches-Research-Directions"><a href="#DataSketches-Research-Directions" class="headerlink" title="DataSketches Research Directions"></a>DataSketches Research Directions</h1><blockquote>
+<p>　<a href="https://datasketches.github.io/docs/Research.html" target="_blank" rel="noopener">https://datasketches.github.io/docs/Research.html</a><br>来源与雅虎的开源项目，翻译ｂｙ <a href="https://github.com/Titanssword" target="_blank" rel="noopener">Titanssword</a><br>结合自己研究方向，可合并摘要，分位数, k 均值聚类的流式算法, 有关图流处理算法, 有关滑动窗口流算法</p>
+</blockquote>
+<h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>在分析海量数据集时，即使对数据进行非常基本的查询，也可能需要巨大的计算资源（内存和计算时间）。这种查询的例子包括识别频繁项目，唯一计数查询，分位数和直方图查询，矩阵分析任务（例如主成分分析和潜在语义分析）以及更复杂的下游机器学习任务。一旦数据量大了之后，这些计算任务将变得十分困难。也达不到实时性的要求。</p>
+<p>然而，在许多情况下，只要近似误差被仔细控制，近似的答案是可以接受的。例如，如果数据是嘈杂的，那么比数据中已经存在的噪声更少的错误的答案与确切的算法一样有用。即使数据是无噪声的，许多高层次的商业决策也不需要对数据有精确的了解：在特定的时间内，有多少唯一身份用户访问某个网站时，可以知道多达 1％的错误，这通常与确切的答案一样有效。</p>
+<p>当大致的答案是可以接受的，系统设计人员已经掌握了关于流算法的大量文献。这些算法一次处理海量数据集，并计算数据集的非常小的摘要（也称为草图），从中可以得出准确（但近似）的查询答案。许多流式传输算法甚至对 PB 级大小的数据集也只用了几千字节的空间，并且能够对每个数据进行定时处理，从而实现实时分析。</p>
+<h2 id="Mergeable-Summaries"><a href="#Mergeable-Summaries" class="headerlink" title="Mergeable Summaries"></a>Mergeable Summaries</h2><p>理想情况下，数据流算法将生成可合并的摘要，这意味着可以独立处理许多不同的数据流，然后可以快速组合每个数据流计算出的摘要，以获得各种数据集组合的精确摘要（联合，交叉等）。可合并摘要使大量数据集能够以完全分布式和并行的方式自动处理，通过在许多机器上任意分割数据，汇总每个分区，并无缝结合结果。除了与精确的方法相比，大大减少了内存使用量，计算时间和延迟，可合并的摘要也极大地简化了系统架构。它们允许非加性查询（如唯一计数查询）被视为加法，两个草图的 “总和” 是它们的合并。这意味着数据可以分割成片段，每个片段分别勾画，草图存储在简单的数据集市架构中，并在查询时合并。</p>
+<p>合并摘要的最终重要应用是在外围设备较弱的情况下节能。例如，物联网（IoT）的主要优势之一是它可以监控和聚合物联网设备（如传感器和设备）的数据。这样的设备往往是功率受限的，所以必须最小化必须从每个设备发送到聚合中心的数据量。可合并摘要启用了这一点：每个设备可以自己计算自己数据的摘要，并只将摘要发送给聚合中心，聚合中心将所有接收到的摘要合并，以获取所有设备数据集的全局摘要。</p>
+<p>Agarwal 等人在其 <a href="https://www.cs.utah.edu/~jeffp/papers/merge-summ.pdf" target="_blank" rel="noopener">Mergeable Summaries 可合并摘要论文</a> 中讨论了不同类型的可合并摘要</p>
+<h2 id="The-Data-Sketches-Open-Source-Library"><a href="#The-Data-Sketches-Open-Source-Library" class="headerlink" title="The Data Sketches Open Source Library"></a>The Data Sketches Open Source Library</h2><p>该库从一开始就被设计为高性能和高质量的产品，适用于需要处理海量数据的大型数据处理系统。该库是用 Java 编写的，包含了各种基本查询类的最新算法，包括识别频繁项目，唯一计数查询，计算分位数和直方图以及采样。它很快将包含像 PCA 这样的矩阵分析任务的算法。库中的所有算法都会生成可合并的摘要，并对返回的答案的准确性提供正式的保证。</p>
+<p>目前，该库的核心贡献者是 Lee Rhodes，Kevin Lang，Jon Malkin 和 Alex Saydakov（全部来自 Yahoo / Oath），Justin Thaler（乔治敦大学计算机系助理教授）和 Edo Liberty（首席科学家在亚马逊网络服务和亚马逊 AI 算法组的经理）</p>
+<p>该库已经在整个行业和政府进行了调整。例如，在雅虎被设计和创建的地方，该库在内部被广泛使用，以减少许多任务的处理时间从几天到几秒。在 SpliceMachine 中，它用于数据库查询计划和优化。它也深深嵌入到一个叫做 Druid 的低延迟开源数据存储中，还有一个由英国情报机构 GCHQ 维护的叫做 Gaffer 的开源图形数据库。</p>
+<p>除了在部署系统中的实用性之外，开发数据草图库的开发过程导致了有趣的研究。这既涉及流算法的理论，也涉及解决真实世界流引擎中至关重要的问题，但在学术文献中经常被忽略。这些问题包括可合并性，以及处理加权流更新（即每个数据片带有相关重要性度量的数据流）。</p>
+<p>特别是在数据草图库上的工作已经导致了新颖的算法实现用于识别数据流中频繁项目的最新实用性能 [ABL + 17] 和用于唯一计数查询的可合并摘要 [DLRT16]。在理论层面上，该库的工作导致了分位数查询的流近似算法的空间复杂度的解决，这是一个长期以来的开放性问题 [KLL16]<a href="https://arxiv.org/pdf/1603.05346.pdf" target="_blank" rel="noopener">Optimal quantile approximation in streams</a>，也是解决识别频繁项集的问题 [LMTU16]<a href="https://dl.acm.org/citation.cfm?id=2902278" target="_blank" rel="noopener">Space lower bounds for itemset frequency sketches</a>。*</p>
+<p>将新的和更丰富的查询类型的算法结合到库中，以及提高已经实现的算法的效率是主要的机会。</p>
+<h2 id="Improved-Algorithms-for-Unique-Counting"><a href="#Improved-Algorithms-for-Unique-Counting" class="headerlink" title="Improved Algorithms for Unique Counting"></a>Improved Algorithms for Unique Counting</h2><p>在最近的数据草图库 [Lan17] 的工作中，Kevin Lang 描述了几种用于估计数据流中不同元素数量的流式算法。该算法比先前的算法 Hyperloglog（HLL）[FFGM07] 具有更好的空间 / 精度折衷，该算法在近十年来一直被认为是该问题实际性能的黄金标准。具体而言，对于给定的准确度水平，Lang 的算法使用的空间比 HLL 草图的熵少 20％，因此比任何可能的 HLL 实现少 20％的空间。</p>
+<p>关于运行时间，Lang 的预打印显示他的一些算法具有与 HLL 的直接实现相当的速度，但比重度优化的 HLL 实现要慢一些。重要的研究仍然是优化新算法的速度，确定哪种变体算法在真实数据上表现最好，最适合于生产环境，最终产生该算法的生产质量实现。</p>
+<h2 id="Algorithms-For-Anomaly-Detection"><a href="#Algorithms-For-Anomaly-Detection" class="headerlink" title="Algorithms For Anomaly Detection"></a>Algorithms For Anomaly Detection</h2><p>处理海量数据流的共同目标是识别异常事件或数据点。例如，在线广告商或内容提供商可能会尝试识别点击流数据中的欺诈行为，网络运营商可能会尝试快速识别网络入侵者或 DDoS 攻击，或者数据分析师可能会在运行后续学习算法之前尝试清除数据集中的异常值。</p>
+<p>数据草图库已经包含了几种对数据流异常检测有用的算法。一个例子是图书馆用于回答分位数查询的算法。<em> 在分位数问题中，流指定了一个实数列表，并且（例如）顶部或底部百分位数中的任何流更新（根据定义）是在外值或异常值。如上所述，Data Sketches 团队已经解决了流分位数计算的渐近空间复杂度 [KLL16]，目前正在完成文献中已经提出的各种分位数算法的仔细实证研究。对于异常检测有用的库中的第二个算法是其用于识别频繁项目的新颖算法 [ABL + 17]<a href="https://arxiv.org/abs/1705.07001." target="_blank" rel="noopener">A high-performance algorithm for identifying frequent items in data streams</a>：构成异常大部分数据集的任何项目本质上是异常的。</em></p>
+<p>展望未来，Data Sketches 团队将整合适用于异常检测的其他查询类别的算法。主要目标包括熵计算 [CCM10，Tha07]，层级重击者 [MST12] 的识别和超级扩频器的识别 [VSGB05]（所有这些都已经在检测网络流量异常的情况下进行了深入的研究）。</p>
+<p>针对所有这三个问题的最为人所知的流式算法使得黑箱使用用于识别频繁项目的更简单任务的算法。由于库为后一项任务提供了最先进的算法，因此团队将为这些更复杂的问题开发高效的解决方案。</p>
+<p>尽管用于识别分层重击和超分割的现有流媒体算法产生可合并的摘要，但是唯一已知的用于熵计算的实际算法 [CCM10] 不能。 Data Sketches 团队将尝试解决的一个具有挑战性的问题是开发了一种熵计算的实用可合并草图算法。</p>
+<p>##　Matrix and Clustering Algorithms</p>
+<p>对于矩阵的低秩逼近在包括 PCA 在内的许多无监督学习任务中是有用的。通过识别数据矩阵的 “最有说服力的方向”，低秩近似有效地揭示数据集中的潜在结构。他们还加快了下游的学习任务，因为这些任务可以在低秩近似上运行，而不是在原始矩阵上运行。在 [Lib13]<a href="https://arxiv.org/pdf/1206.0594.pdf" target="_blank" rel="noopener">Simple and deterministic matrix sketching</a> 中，Liberty 提出了一种用低秩矩阵来近似数据矩阵的近似最优流算法。该算法假定数据矩阵是以行方式流式传输的，意味着每个流更新以原子方式指定矩阵的新行。</p>
+<p>计算矩阵的低秩近似可以被看作是识别矢量流中的 “频繁方向”，并且 Liberty 的算法可以被看作是用于识别项目流中的频繁项目的算法的直接泛化。基于 [ABL + 17] 中描述的并且已经在数据草图库中实现的频繁项目算法，Data Sketches 团队即将完成 Liberty 算法的生产质量实现。一旦这个实现完成，正在进行的研究将确定额外的优化，以进一步提高算法的速度和准确性，并将执行一个仔细的经验比较其性能相对于文献中的替代算法。 Data Sketches 团队还将开发能够处理数据矩阵的更一般类型更新（而不仅仅是行更新）的算法。</p>
+<p>团队将在不久的将来追求的相关方向是 开发用于 k 均值聚类的流式算法的生产质量实现。低秩矩阵近似和聚类问题是密切相关的（参见，例如，[CEM + 15]）<a href="https://arxiv.org/pdf/1410.6801.pdf" target="_blank" rel="noopener">Dimensionality reduction for k-means clustering and low rank approximation</a>，我们相信低秩矩阵近似的思想对于开发有效的聚类算法是有用的。</p>
+<h2 id="Graph-Algorithms"><a href="#Graph-Algorithms" class="headerlink" title="Graph Algorithms"></a>Graph Algorithms</h2><p>非常大的图形无处不在。它们出现在诸如社交网络分析和网络流量日志之类的设置中，例如亚马逊虚拟私有云所捕获的设置。<em> 有关图流处理算法的丰富的理论文献（参见 McGregor [McG14] 的综述）<a href="http://people.cs.umass.edu/~mcgregor/papers/13-graphsurvey.pdf" target="_blank" rel="noopener"> Graph stream algorithms: a survey.</a>，尽管在这样的算法上应用的工作相对较少。</em></p>
+<p> 开发图形流的生产质量算法是 Data Sketches 团队在不远的将来追求的一个关键方向。<em> 一个主要的目标问题是图稀疏化，其中一个在密集图中抛弃了大部分边，但是这样做是非常谨慎的，所以得到的稀疏图继承了许多与原密集图相同的属性。稀疏图可以看作是原密集图的近似值，可以代替聚类和社区检测等任务下游的密集图。当在稀疏图上运行时，这些下游算法将需要少得多的计算能力，而稀疏图上的结果将可证明地近似原始密集图上的结果。</em></p>
+<h2 id="Sliding-Windows"><a href="#Sliding-Windows" class="headerlink" title="Sliding Windows"></a>Sliding Windows</h2><p>在许多应用程序中，数据最终会变得陈旧或过时，因此查询应该被限制在相对较新的数据中。可合并摘要可以简单地解决这个问题：将数据分成相对较小的块（每个块覆盖一个小时的时间段），分别勾画每个块，并在查询时合并仅最近的摘要块。</p>
+<p>这个解决方案在一些应用中是足够的，但是对于其他应用来说，块必须更细粒度（例如，当检测到持续数秒或数分钟而不是数小时的异常或现象时）。在这些设置中，基于可合并摘要的幼稚方法在内存使用和延迟方面变得非常昂贵。对于这样的设置，理想的解决方案是一个流式算法，在数据过期时自动“忘记”数据。这个设置已经在有关滑动窗口流传输算法的文献中进行了研究。已经研究了用于频繁项目（例如[GDD + 03]）<a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/quantiles.pdf" target="_blank" rel="noopener"> Approximate counts and quantiles over sliding windows. </a>，唯一计数（例如[GT02]）和分位数（例如[AM04]）的滑动窗算法的工作。就像Data Sketches库中的工作已经在标准（非滑动窗口）流设置中针对这些问题中的每一个开发高效算法一样，导致了显着的最近进展，我们相信相关的想法将导致滑动窗口设置也是如此。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/01/19/DataSketches Research Directions/" data-id="cjckt5lrm00002eoc4d61ap7a" class="article-share-link">Compartir</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Introduction_Sketch_Program" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/19/Introduction_Sketch_Program/" class="article-date">
+  <time datetime="2018-01-18T18:05:27.400Z" itemprop="datePublished">2018-01-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="The-Challenge-Fast-Approximate-Analysis-of-Big-Data"><a href="#The-Challenge-Fast-Approximate-Analysis-of-Big-Data" class="headerlink" title="The Challenge: Fast, Approximate Analysis of Big Data"></a>The Challenge: Fast, Approximate Analysis of Big Data</h1><p>Computer Scientists have known about these types of queries for a long time, but not much attention was paid to the impact of these queries until the Internet exploded and Big Data reared its ugly head.</p>
+<p>It has been proved (and can be intuited, with some thought) that in order to compute these queries exactly, assuming nothing about the input stream and, for the quantiles case, without any restrictions on the number of quantiles requested, requires the query process to keep copies of every unique value encountered.</p>
+<p>This is staggering. In order to count the exact number of unique visitors to a web site that has a billion users per day, requires the query process to keep on hand a billion records of all the unique visitors it has ever seen. Unique identifier counts are not additive either, so no amount of parallelism will help you. You cannot add the number of identifiers from the apps data site to the number of identifiers from the music site because of identifiers that appear on both sites, i.e., the duplicates.</p>
+<p>The exact quantiles query is even worse. Not only does it need to keep a copy of every item seen, it needs to sort them to boot!</p>
+<h2 id="If-An-Approximate-Answer-is-Acceptable-…"><a href="#If-An-Approximate-Answer-is-Acceptable-…" class="headerlink" title="If An Approximate Answer is Acceptable …"></a>If An Approximate Answer is Acceptable …</h2><p>Here is a very fundamental business question: “Do you really need 10+ digits of accuracy in the answers to your queries? This leads to the fundamental premise of this entire branch of Computer Science:</p>
+<p><em>If an approximate answer is acceptable, then it is possible that there are algorithms that allow you to answer these queries orders-of-magnitude faster.</em></p>
+<p>This, of course, assumes that you care about <em>query responsiveness and speed</em>; that you care about <em>resource utilization</em>; and if you need to <em>accept some approximation</em>, that you care about knowing something about the <em>accuracy</em> that you end up with.</p>
+<p><em>Sketches</em>, the informal name for these algorithms, offer an excellent solution to these types of queries, and in some cases may be the only solution.</p>
+<p>Instead of requiring to keep such enormous data on-hand, sketches have <em>small data structures</em> that are usually kilobytes in size, orders-of-magnitude smaller than required by the exact solutions. Sketches are also streaming algorithms, in that they only need to see each incoming item only once.</p>
+<h2 id="System-Architecture-for-Sketch-Processing-of-Big-Data"><a href="#System-Architecture-for-Sketch-Processing-of-Big-Data" class="headerlink" title="System Architecture for Sketch Processing of Big Data"></a>System Architecture for Sketch Processing of Big Data</h2><h3 id="Big-Win-1-Size-of-the-Query-Process"><a href="#Big-Win-1-Size-of-the-Query-Process" class="headerlink" title="Big Win #1: Size of the Query Process"></a>Big Win #1: Size of the Query Process</h3><p>BigWin1SmallQuerySpace</p>
+<p>The first big win is <em>the size of the query process</em> on the right has been reduced many orders-of-magnitude. Unfortunately, the process is still slow (although it was faster than before), because the single query process must sequentially scan through all the raw data on the left, which is huge.</p>
+<h3 id="Big-Win-2-Sketch-Mergeability-Enables-Parallel-Processing"><a href="#Big-Win-2-Sketch-Mergeability-Enables-Parallel-Processing" class="headerlink" title="Big Win #2: Sketch Mergeability Enables Parallel Processing"></a>Big Win #2: Sketch Mergeability Enables Parallel Processing</h3><p>BigWin2Mergeability</p>
+<p>The second big win is that the sketch data structures are <em>“Mergeable”</em>, which enables <em>parallel processing</em>. The input data can be partitioned into many fragments. At query time each partition is processed with its own sketch. Once all the sketches have completed their scan of their associated data, the merging (or unioning) of the sketches is very fast. This provides another speed performance boost. But there is a catch. Typical user data is <em>highly skewed</em> and is unlikely to be evenly divided across the partitions. The overall speed of the processing is now determined by the most <em>heavily loaded partition.</em><br>Big Wins #3 &amp; 4: Query Speed, Architecture Simplicity</p>
+<h3 id="BigWins3-4QuerySpeedArchitecture"><a href="#BigWins3-4QuerySpeedArchitecture" class="headerlink" title="BigWins3_4QuerySpeedArchitecture"></a>BigWins3_4QuerySpeedArchitecture</h3><p>The placement of the query in this diagram illustrates Big Win #3. The primary difference between this diagram and the previous one is where in the data flow the query is performed and how much work the query process has to do. The Big Win #2 is an improvement over #1, but still requires the query process to process raw data in partitions, which still can be huge.</p>
+<p>However, if we do the sketching of each of the partitions at the same time we do the partitioning we create an intermediate “hyper-cube” or “data-mart” architecture where each row becomes a summary row for that partition. The intermediate staging no longer has any raw data. It only consists of a single row for each dimension combination. And the metric columns for that row contain the aggregation of whatever other additive metrics you require, plus a column that contains the binary image of a sketch. At query time, the only thing the query process needs to do is select the appropriate rows needed for the query and merge the sketches from those rows. We have measured the merge speed of the Theta sketches in the range of 10 to 20 million sketches per second in a large system with real data. This is the Big Win #3.</p>
+<p>Placing the sketch, along with other metrics into a data-mart architecture vastly simplifies the design of the system, which is the Big Win #4.<br>Big Wins #5 &amp; 6: Real Time, Late Data Updates</p>
+<p>BigWins5_6RealTimeLateData</p>
+<p>Processing the continuous real-time stream from the edge web servers is possible with Storm that splits the stream into multiple parallel streams based on the dimensions. These can be ingested into Druid in real-time and sent directly to sketches organized by time and dimension combination. In our Flurry system the time resolution is 1 minute. The reporting web servers query these 1 minute sketches on 15 second intervals. This Real-time, Big Win #5, is simply not feasible without sketches. In addition, these sketches can be correctly updated with late data, which happens frequently with mobile traffic. This becomes the Big Win #6.<br>Big Win #7: Resource Utilization and Cost</p>
+<p>It has been our experience at Yahoo, that a good implementation of these large analysis systems using sketches reduces the overall cost of the system considerably. It is difficult to quote exact numbers as your mileage will vary as it is system and data dependent.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/01/19/Introduction_Sketch_Program/" data-id="cjckt5ls000012eoc00cd3vb7" class="article-share-link">Compartir</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/19/hello-world/" class="article-date">
+  <time datetime="2018-01-18T17:54:34.362Z" itemprop="datePublished">2018-01-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/01/19/hello-world/">Hello World</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/01/19/hello-world/" data-id="cjckt5ls600022eocfxw7znjp" class="article-share-link">Compartir</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archivos</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Posts recientes</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/01/19/mapreduce implements/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2018/01/19/DataSketches Research Directions/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2018/01/19/Introduction_Sketch_Program/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2018/01/19/hello-world/">Hello World</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Construido por <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

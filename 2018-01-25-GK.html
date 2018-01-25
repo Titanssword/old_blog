@@ -15,18 +15,18 @@
 
 
 
-<meta name="description" content="Computer Scientists have known about these types of queries for a long time, but not much attention was paid to the impact of these queries until the Internet exploded and Big Data reared its ugly hea">
-<meta name="keywords" content="DataSketches,Yahoo,data stream">
+<meta name="description" content="Space efficient online computation of quantile summaries">
+<meta name="keywords" content="Stream,quantile problem,GK">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Fast, Approximate Analysis of Big Data">
-<meta property="og:url" content="https://github.com/Titanssword/2018-01-20-Introduction_Sketch_Program.html">
+<meta property="og:title" content="GK 算法简介">
+<meta property="og:url" content="https://github.com/Titanssword/2018-01-25-GK.html">
 <meta property="og:site_name" content="斯沃德的小博客">
-<meta property="og:description" content="Computer Scientists have known about these types of queries for a long time, but not much attention was paid to the impact of these queries until the Internet exploded and Big Data reared its ugly hea">
+<meta property="og:description" content="Space efficient online computation of quantile summaries">
 <meta property="og:locale" content="zh,english">
-<meta property="og:updated_time" content="2018-01-19T23:10:29.877Z">
+<meta property="og:updated_time" content="2018-01-25T13:17:16.287Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Fast, Approximate Analysis of Big Data">
-<meta name="twitter:description" content="Computer Scientists have known about these types of queries for a long time, but not much attention was paid to the impact of these queries until the Internet exploded and Big Data reared its ugly hea">
+<meta name="twitter:title" content="GK 算法简介">
+<meta name="twitter:description" content="Space efficient online computation of quantile summaries">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -58,7 +58,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>Fast, Approximate Analysis of Big Data | 斯沃德的小博客</title>
+<title>GK 算法简介 | 斯沃德的小博客</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -263,11 +263,11 @@
     </div>
     <link class="menu-list" tags="Tags" friends="Friends" about="About Me"/>
 </nav>
-      <div class="body-wrap"><article id="post-Introduction_Sketch_Program" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-GK" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018-01-20-Introduction_Sketch_Program.html" class="article-date">
-      <time datetime="2018-01-19T23:10:29.877Z" itemprop="datePublished">2018-01-20</time>
+      <a href="/2018-01-25-GK.html" class="article-date">
+      <time datetime="2018-01-25T13:17:16.287Z" itemprop="datePublished">2018-01-25</time>
 </a>
 
 
@@ -282,7 +282,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Fast, Approximate Analysis of Big Data
+      GK 算法简介
     </h1>
   
 
@@ -291,13 +291,13 @@
       <div class="article-info article-info-post">
         
     <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/Stream-Data-Processing/">Stream Data Processing</a>
+    <a class="article-category-link" href="/categories/paper/">paper</a>
     </div>
 
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/DataSketches/">DataSketches</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Yahoo/">Yahoo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/data-stream/">data stream</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/GK/">GK</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Stream/">Stream</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/quantile-problem/">quantile problem</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -307,25 +307,19 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h1 id="The-Challenge-Fast-Approximate-Analysis-of-Big-Data"><a href="#The-Challenge-Fast-Approximate-Analysis-of-Big-Data" class="headerlink" title="The Challenge: Fast, Approximate Analysis of Big Data"></a>The Challenge: Fast, Approximate Analysis of Big Data</h1><p>Computer Scientists have known about these types of queries for a long time, but not much attention was paid to the impact of these queries until the Internet exploded and Big Data reared its ugly head.</p>
-<p>It has been proved (and can be intuited, with some thought) that in order to compute these queries exactly, assuming nothing about the input stream and, for the quantiles case, without any restrictions on the number of quantiles requested, requires the query process to keep copies of every unique value encountered.</p>
-<p>This is staggering. In order to count the exact number of unique visitors to a web site that has a billion users per day, requires the query process to keep on hand a billion records of all the unique visitors it has ever seen. Unique identifier counts are not additive either, so no amount of parallelism will help you. You cannot add the number of identifiers from the apps data site to the number of identifiers from the music site because of identifiers that appear on both sites, i.e., the duplicates.</p>
-<p>The exact quantiles query is even worse. Not only does it need to keep a copy of every item seen, it needs to sort them to boot!</p>
-<h2 id="If-An-Approximate-Answer-is-Acceptable-…"><a href="#If-An-Approximate-Answer-is-Acceptable-…" class="headerlink" title="If An Approximate Answer is Acceptable …"></a>If An Approximate Answer is Acceptable …</h2><p>Here is a very fundamental business question: “Do you really need 10+ digits of accuracy in the answers to your queries? This leads to the fundamental premise of this entire branch of Computer Science:</p>
-<p><em>If an approximate answer is acceptable, then it is possible that there are algorithms that allow you to answer these queries orders-of-magnitude faster.</em></p>
-<p>This, of course, assumes that you care about <em>query responsiveness and speed</em>; that you care about <em>resource utilization</em>; and if you need to <em>accept some approximation</em>, that you care about knowing something about the <em>accuracy</em> that you end up with.</p>
-<p><em>Sketches</em>, the informal name for these algorithms, offer an excellent solution to these types of queries, and in some cases may be the only solution.</p>
-<p>Instead of requiring to keep such enormous data on-hand, sketches have <em>small data structures</em> that are usually kilobytes in size, orders-of-magnitude smaller than required by the exact solutions. Sketches are also streaming algorithms, in that they only need to see each incoming item only once.</p>
-<h2 id="System-Architecture-for-Sketch-Processing-of-Big-Data"><a href="#System-Architecture-for-Sketch-Processing-of-Big-Data" class="headerlink" title="System Architecture for Sketch Processing of Big Data"></a>System Architecture for Sketch Processing of Big Data</h2><h3 id="Big-Win-1-Size-of-the-Query-Process"><a href="#Big-Win-1-Size-of-the-Query-Process" class="headerlink" title="Big Win #1: Size of the Query Process"></a>Big Win #1: Size of the Query Process</h3><p>BigWin1SmallQuerySpace</p>
-<p>The first big win is <em>the size of the query process</em> on the right has been reduced many orders-of-magnitude. Unfortunately, the process is still slow (although it was faster than before), because the single query process must sequentially scan through all the raw data on the left, which is huge.</p>
-<h3 id="Big-Win-2-Sketch-Mergeability-Enables-Parallel-Processing"><a href="#Big-Win-2-Sketch-Mergeability-Enables-Parallel-Processing" class="headerlink" title="Big Win #2: Sketch Mergeability Enables Parallel Processing"></a>Big Win #2: Sketch Mergeability Enables Parallel Processing</h3><p>BigWin2Mergeability</p>
-<p>The second big win is that the sketch data structures are <em>“Mergeable”</em>, which enables <em>parallel processing</em>. The input data can be partitioned into many fragments. At query time each partition is processed with its own sketch. Once all the sketches have completed their scan of their associated data, the merging (or unioning) of the sketches is very fast. This provides another speed performance boost. But there is a catch. Typical user data is <em>highly skewed</em> and is unlikely to be evenly divided across the partitions. The overall speed of the processing is now determined by the most <em>heavily loaded partition.</em><br>Big Wins #3 &amp; 4: Query Speed, Architecture Simplicity</p>
-<h3 id="BigWins3-4QuerySpeedArchitecture"><a href="#BigWins3-4QuerySpeedArchitecture" class="headerlink" title="BigWins3_4QuerySpeedArchitecture"></a>BigWins3_4QuerySpeedArchitecture</h3><p>The placement of the query in this diagram illustrates Big Win #3. The primary difference between this diagram and the previous one is where in the data flow the query is performed and how much work the query process has to do. The Big Win #2 is an improvement over #1, but still requires the query process to process raw data in partitions, which still can be huge.</p>
-<p>However, if we do the sketching of each of the partitions at the same time we do the partitioning we create an intermediate “hyper-cube” or “data-mart” architecture where each row becomes a summary row for that partition. The intermediate staging no longer has any raw data. It only consists of a single row for each dimension combination. And the metric columns for that row contain the aggregation of whatever other additive metrics you require, plus a column that contains the binary image of a sketch. At query time, the only thing the query process needs to do is select the appropriate rows needed for the query and merge the sketches from those rows. We have measured the merge speed of the Theta sketches in the range of 10 to 20 million sketches per second in a large system with real data. This is the Big Win #3.</p>
-<p>Placing the sketch, along with other metrics into a data-mart architecture vastly simplifies the design of the system, which is the Big Win #4.<br>Big Wins #5 &amp; 6: Real Time, Late Data Updates</p>
-<p>BigWins5_6RealTimeLateData</p>
-<p>Processing the continuous real-time stream from the edge web servers is possible with Storm that splits the stream into multiple parallel streams based on the dimensions. These can be ingested into Druid in real-time and sent directly to sketches organized by time and dimension combination. In our Flurry system the time resolution is 1 minute. The reporting web servers query these 1 minute sketches on 15 second intervals. This Real-time, Big Win #5, is simply not feasible without sketches. In addition, these sketches can be correctly updated with late data, which happens frequently with mobile traffic. This becomes the Big Win #6.<br>Big Win #7: Resource Utilization and Cost</p>
-<p>It has been our experience at Yahoo, that a good implementation of these large analysis systems using sketches reduces the overall cost of the system considerably. It is difficult to quote exact numbers as your mileage will vary as it is system and data dependent.</p>
+        <h1 id="GK-algorithm"><a href="#GK-algorithm" class="headerlink" title="GK algorithm"></a>GK algorithm</h1><h2 id="introduction"><a href="#introduction" class="headerlink" title="introduction"></a>introduction</h2><p>在这里，我们研究了一种算法，该算法可以持续维护汇总信息，并且只需要使用通常需要的一小部分内存就能在小的有界误差范围内回答查询。有许多算法可以解决这个问题，但是我们要研究的是 Greenwald 和 Khanna 在他们的 2001 年的论文 <a href="https://dl.acm.org/citation.cfm?doid=375663.375670" target="_blank" rel="noopener">“空间高效的在线计算分位数摘要”</a>。比其他许多算法理解起来要复杂得多，但据我所知，它是空间使用最好的。另外，我们稍后将会研究的其他许多论文将用它来解决有趣的问题。</p>
+<h2 id="data-structure"><a href="#data-structure" class="headerlink" title="data structure"></a>data structure</h2><p>Greenwald-Khanna（GK 从现在开始）基于一个简单的数据结构。S(n) 这种数据结构包括了一系列排过序的元组，这些元组对应了我们迄今以来观察到的数据的一个子集，对于每个观察到的在 S 中的ｖ，我们维护一个 implicit bound 对于观察点的最大可能的 rank 值和最小可能的 rank 值．令 rmin(v) 和 rmax(v) 分别表示ｖ可能的 rank 的上届和下届．S 包括了 t0,t1,…ts-1 个元组，每一个元组（v，g，Δ）包含了三个元素．</p>
+<ol>
+<li>vi 表示数据流中实际出现的一个值．</li>
+<li>gi ＝　rmin(vi) - rmin(vi-1).</li>
+<li>Δ = rmax(vi) - rmin(vi).<br>这样，我们可以确保，在任何时刻，最大可能和最小可能都在 Summary 中．换句话说，v0 和 vs-1 一直表示我们看到的数据流中的最大值和最小值．rmin(vi) = sum(gj),where j&lt;=i. rmax(vi) = sum(gj+Δj),where j&lt;=i ，因此, gi + Δi - 1 是所有数字的上届，sum(gi) = n, 表示所有出现的数字的数量和．<br>该算法通过相应的插入和压缩算法，以尽量保持尽可能少的元组，同时始终保持对于任何元组我们有 g +Δ&lt;= 2 <em>ε</em> n 的不变量。只要我们能够牢记这一点，算法总会给出正确的ε- 近似的答案。ε的有效值在很大程度上取决于你想要做什么样的查询。例如，如果你想要第 90 百分位数，那么ε= 0.1 就可以了，对于第 99 个百分位数，ε= 0.01 就可以了，依此类推。</li>
+</ol>
+<h2 id="insert"><a href="#insert" class="headerlink" title="insert"></a>insert</h2><p>GK Insert（）算法很简单。它扫描我们维护的元组列表，找到应该插入新元组的正确位置。这个元组总是 {值，1，floor（2 <em>ε</em> n）}，其中ε是我们所瞄准的精度，n 是到目前为止看到的元素的数量。上述例外是插入新的最大值或最小值。在这种情况下，元组是 {value，1,0}。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Insert(double v) &#123;</span><br><span class="line">Tuple newValue = new Tuple(v, 1);</span><br><span class="line">int idx = 0;</span><br><span class="line">foreach (Tuple t in S) &#123;</span><br><span class="line">    if (v &lt; t.value)</span><br><span class="line">break;</span><br><span class="line">idx++;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">if (idx == 0 || idx == S.Count) // the new element is the new min or max</span><br><span class="line">newValue.delta = 0;</span><br><span class="line">else</span><br><span class="line">newValue.delta = Floor(2 * epsilon * N);</span><br><span class="line"></span><br><span class="line">S.Insert(idx, newValue);</span><br><span class="line">++N;</span><br><span class="line">  Compress();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Compress"><a href="#Compress" class="headerlink" title="Compress"></a>Compress</h2><p>GK 算法的核心在于 Compress（）函数。这是我们摆脱不必要的元组，同时保持必要的不变量，以确保我们可以给出正确的答案。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">for (int i = 0; i &lt; S.Count - 1; ++i) &#123;</span><br><span class="line">if (S[i].g + S[i + 1].g + S[i + 1].delta &lt;= Floor(2 * epsilon * N)) &#123;</span><br><span class="line">S[i + 1].g += S[i].g;</span><br><span class="line">S.RemoveAt(i);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="get-rank"><a href="#get-rank" class="headerlink" title="get rank"></a>get rank</h2><p>这个简化的压缩代码遍历列表并合并对，只要新的对的加上Δ的值不违反我们的不变量。最后，我们现在可以轻松地查询我们的数据结构。回想一下，对于任何元组，该值的最小等级是 g 到该元组的总和，最大等级是通过将Δ加到该和上而得到的。因此，只需遍历元组列表就可以了，一旦找到一个元组的值大于要搜索的元素的值，然后元组的值小于该元素的值。下面给出计算分位数的算法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">for (int i = 0; i &lt; S.Count - 1; ++i) &#123;</span><br><span class="line">rMin += S[i].g;</span><br><span class="line">rMax = rMin + S[i].delta;</span><br><span class="line"></span><br><span class="line">if (r - rMin &lt;= epsilon*N &amp;&amp; rMax - r &lt;= epsilon*N) &#123;</span><br><span class="line">return S[i].value;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面的变量 r 是我们正在寻找的等级。上面的工作是通过按照我们的初始定义连续计算每个元组的最小和最大可能的等级。如果我们想要的等级落在这个范围内，那么我们返回这个元组的值。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://papercruncher.wordpress.com/2010/03/02/stream-algorithms-order-statistics/" target="_blank" rel="noopener">Stream Algorithms: Order Statistics</a><br><a href="http://infolab.stanford.edu/~datar/courses/cs361a/papers/quantiles.pdf" target="_blank" rel="noopener">Space-Efficient Online Computation of Quantile<br>Summaries</a></p>
 
       
     </div>
@@ -334,13 +328,13 @@
   
     
     <div class="copyright">
-        <p><span>Title:</span><a href="/2018-01-20-Introduction_Sketch_Program.html">Fast, Approximate Analysis of Big Data</a></p>
+        <p><span>Title:</span><a href="/2018-01-25-GK.html">GK 算法简介</a></p>
         <p><span>Author:</span><a href="/" title="Back to Homepage">斯沃德 (Titanssword)</a></p>
-        <p><span>Created:</span>2018-01-20, 00:10:29</p>
-        <p><span>Updated:</span>2018-01-20, 07:10:29</p>
+        <p><span>Created:</span>2018-01-25, 14:17:16</p>
+        <p><span>Updated:</span>2018-01-25, 21:17:16</p>
         <p>
-            <span>Full URL:</span><a class="post-url" href="/2018-01-20-Introduction_Sketch_Program.html" title="Fast, Approximate Analysis of Big Data">https://github.com/Titanssword/2018-01-20-Introduction_Sketch_Program.html</a>
-            <span class="copy-path" data-clipboard-text="From https://github.com/Titanssword/2018-01-20-Introduction_Sketch_Program.html　　By 斯沃德 (Titanssword)" title="Copy Article&#39;s Link &amp; Author"><i class="fa fa-clipboard"></i></span>
+            <span>Full URL:</span><a class="post-url" href="/2018-01-25-GK.html" title="GK 算法简介">https://github.com/Titanssword/2018-01-25-GK.html</a>
+            <span class="copy-path" data-clipboard-text="From https://github.com/Titanssword/2018-01-25-GK.html　　By 斯沃德 (Titanssword)" title="Copy Article&#39;s Link &amp; Author"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
     </div>
@@ -350,15 +344,15 @@
     <nav id="article-nav">
         
             <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018-01-20-mapreduce implements.html">
-                    This is the implementation of 6.824 Lab1 MapReduce
+                <a href="/2018-01-25-Q-Digest.html">
+                    Q-Digest 算法简介
                 </a>
             </div>
         
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2018-01-20-hello-world.html">
-                    Hello World
+                <a href="/2018-01-21-time-Timer.html">
+                    Go 的定时器的使用
                 </a>
             </div>
         
@@ -371,7 +365,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">Contents</strong>
         
-            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#The-Challenge-Fast-Approximate-Analysis-of-Big-Data"><span class="toc-number">1.</span> <span class="toc-text">The Challenge: Fast, Approximate Analysis of Big Data</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#If-An-Approximate-Answer-is-Acceptable-…"><span class="toc-number">1.1.</span> <span class="toc-text">If An Approximate Answer is Acceptable …</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#System-Architecture-for-Sketch-Processing-of-Big-Data"><span class="toc-number">1.2.</span> <span class="toc-text">System Architecture for Sketch Processing of Big Data</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Big-Win-1-Size-of-the-Query-Process"><span class="toc-number">1.2.1.</span> <span class="toc-text">Big Win #1: Size of the Query Process</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Big-Win-2-Sketch-Mergeability-Enables-Parallel-Processing"><span class="toc-number">1.2.2.</span> <span class="toc-text">Big Win #2: Sketch Mergeability Enables Parallel Processing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BigWins3-4QuerySpeedArchitecture"><span class="toc-number">1.2.3.</span> <span class="toc-text">BigWins3_4QuerySpeedArchitecture</span></a></li></ol></li></ol></li></ol>
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#GK-algorithm"><span class="toc-number">1.</span> <span class="toc-text">GK algorithm</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#introduction"><span class="toc-number">1.1.</span> <span class="toc-text">introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#data-structure"><span class="toc-number">1.2.</span> <span class="toc-text">data structure</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#insert"><span class="toc-number">1.3.</span> <span class="toc-text">insert</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Compress"><span class="toc-number">1.4.</span> <span class="toc-text">Compress</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#get-rank"><span class="toc-number">1.5.</span> <span class="toc-text">get rank</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">1.6.</span> <span class="toc-text">参考</span></a></li></ol></li></ol>
         
     </div>
     <style>
@@ -407,7 +401,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"Fast, Approximate Analysis of Big Data　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"GK 算法简介　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -427,7 +421,7 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2018-01-20-mapreduce implements.html" title="Pre: This is the implementation of 6.824 Lab1 MapReduce">
+            <a href="/2018-01-25-Q-Digest.html" title="Pre: Q-Digest 算法简介">
                 <i class="fa fa-angle-left"></i>
             </a>
         
@@ -435,7 +429,7 @@
         <a title="Mini Archives"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2018-01-20-hello-world.html" title="Next: Hello World">
+            <a href="/2018-01-21-time-Timer.html" title="Next: Go 的定时器的使用">
                 <i class="fa fa-angle-right"></i>
             </a>
         

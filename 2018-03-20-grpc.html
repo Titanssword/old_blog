@@ -15,24 +15,18 @@
 
 
 
-<meta name="description" content="This algorithm is from Medians and Beyond: New Aggregation Techniques for Sensor Networks">
-<meta name="keywords" content="Stream,quantile problem,Q-digest">
+<meta name="description" content="use gRPC to build the test platform for stream algorithm in Docker">
+<meta name="keywords" content="gRPC,stream algorithm implement,Docker">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Q-Digest 算法简介">
-<meta property="og:url" content="https://github.com/Titanssword/2018-02-20-Q-Digest.html">
+<meta property="og:title" content="gRPC example in Docker">
+<meta property="og:url" content="https://github.com/Titanssword/2018-03-20-grpc.html">
 <meta property="og:site_name" content="斯沃德的小博客">
-<meta property="og:description" content="This algorithm is from Medians and Beyond: New Aggregation Techniques for Sensor Networks">
+<meta property="og:description" content="use gRPC to build the test platform for stream algorithm in Docker">
 <meta property="og:locale" content="zh,english">
-<meta property="og:image" content="https://papercruncher.files.wordpress.com/2011/07/qdigest.png">
-<meta property="og:image" content="https://papercruncher.files.wordpress.com/2011/07/qdigestcompressed.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/q-digest/Screenshot%20from%202018-01-25%2005-27-58.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/q-digest/Screenshot%20from%202018-01-25%2005-26-48.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/q-digest/Screenshot%20from%202018-01-25%2005-28-47.png">
-<meta property="og:updated_time" content="2018-02-19T22:03:59.126Z">
+<meta property="og:updated_time" content="2018-03-19T23:28:08.796Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Q-Digest 算法简介">
-<meta name="twitter:description" content="This algorithm is from Medians and Beyond: New Aggregation Techniques for Sensor Networks">
-<meta name="twitter:image" content="https://papercruncher.files.wordpress.com/2011/07/qdigest.png">
+<meta name="twitter:title" content="gRPC example in Docker">
+<meta name="twitter:description" content="use gRPC to build the test platform for stream algorithm in Docker">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -64,7 +58,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>Q-Digest 算法简介 | 斯沃德的小博客</title>
+<title>gRPC example in Docker | 斯沃德的小博客</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -269,11 +263,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap"><article id="post-Q-Digest" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-grpc" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018-02-20-Q-Digest.html" class="article-date">
-      <time datetime="2018-02-19T23:00:37.473Z" itemprop="datePublished">2018-02-20</time>
+      <a href="/2018-03-20-grpc.html" class="article-date">
+      <time datetime="2018-03-19T23:28:08.796Z" itemprop="datePublished">2018-03-20</time>
 </a>
 
 
@@ -288,7 +282,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Q-Digest 算法简介
+      gRPC example in Docker
     </h1>
   
 
@@ -297,13 +291,13 @@
       <div class="article-info article-info-post">
         
     <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/paper/">paper</a>
+    <a class="article-category-link" href="/categories/implement/">implement</a>
     </div>
 
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Q-digest/">Q-digest</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Stream/">Stream</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/quantile-problem/">quantile problem</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/">Docker</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/gRPC/">gRPC</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/stream-algorithm-implement/">stream algorithm implement</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -313,28 +307,21 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h2 id="introduction"><a href="#introduction" class="headerlink" title="introduction"></a>introduction</h2><p>数据结构在设计时考虑了传感器网络，其中最小化无线电传输开销是非常重要的。它最初出现在 <a href="https://graphics.stanford.edu/courses/cs468-05-winter/Papers/Information_Aggregation/Suri_sensys04.pdf" target="_blank" rel="noopener">“Medians and Beyond: New Aggregation Techniques for Sensor Networks”</a> 由 Shrivastava 等人提出．</p>
-<h2 id="example"><a href="#example" class="headerlink" title="example"></a>example</h2><p>Q-Digest 只是一个完整的二叉树，在值的范围内，其中叶节点本身就是值。在下面的例子中，我们对包含 1 到 4 的值进行了摘要，我们看到值 1 和值 4 都是 7 次。</p>
-<p><img src="https://papercruncher.files.wordpress.com/2011/07/qdigest.png" alt="qdigest-1"></p>
-<p>新颖性是压缩算法，它允许低频值在树上传播并合并。在下面的例子中，我们有一些信息丢失。我们知道在 1 和 2 之间有 10 个值，但是我们不知道每个值的确切数量</p>
-<p><img src="https://papercruncher.files.wordpress.com/2011/07/qdigestcompressed.png" alt="qdigest-２"></p>
-<p>在构建 qdigest 时，要记住一个不变的因素。一个节点，其兄弟和它的父节点的总数必须大于 n / k，其中 n 是所有计数的总和，k 是我们选择的压缩因子。根节点是一个例外。在本文中，这被称为属性 2. 属性 1 指出，除非是叶节点，否则节点的数量必须小于 n / k。在原始文件中使用属性 1 来证明对 qdigest 的一些保证。</p>
-<h2 id="requirement"><a href="#requirement" class="headerlink" title="requirement"></a>requirement</h2><p>数据结构提供了一些很好的保证，使其非常实用：</p>
-<ul>
-<li><p>给定一个压缩因子 k，摘要的大小不会超过 3k</p>
-</li>
-<li><p>合并两个 q - 摘要时，如分布式设置中常见的那样，所有必须做的就是将这两个 q - 摘要合并，并运行压缩算法。这比 GK 算法的分布式扩展简单得多。</p>
-</li>
-<li><p>在回答分位数查询时，误差受 log（σ）/ k 限制，其中σ是存储在摘要中的值的最大范围。因此，我们对中位查询的回答总是在 0.5n 和（0.5 + log（σ）/ k）* n 之间。</p>
-</li>
-<li><p>合并摘要时，我们可以保持相同的相对错误</p>
-</li>
-<li><p>正如我们在将来的文章中将会看到的那样，我们可以增加数据结构来创造许多有趣的可能性</p>
-</li>
-</ul>
-<h2 id="论文中的实例"><a href="#论文中的实例" class="headerlink" title="论文中的实例"></a>论文中的实例</h2><p><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/q-digest/Screenshot%20from%202018-01-25%2005-27-58.png" alt="example1"><br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/q-digest/Screenshot%20from%202018-01-25%2005-26-48.png" alt="example2"><br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/q-digest/Screenshot%20from%202018-01-25%2005-28-47.png" alt="example3"></p>
-<p>通过这种特殊的数据结构，保持下来的信息具有以下特征，关于经常出现的数据值的详细信息被保存在摘要中，而不经常出现的值被集中到更大的桶中导致信息丢失</p>
-<p><a href="https://papercruncher.wordpress.com/2011/07/31/q-digest/" target="_blank" rel="noopener">papercruncher 的博客</a><br><a href="https://graphics.stanford.edu/courses/cs468-05-winter/Papers/Information_Aggregation/Suri_sensys04.pdf" target="_blank" rel="noopener">Medians and Beyond: New Aggregation Techniques for Sensor Networks 原文</a><br><a href="https://github.com/addthis/stream-lib/blob/master/src/main/java/com/clearspring/analytics/stream/quantile/QDigest.java">实现</a></p>
+        <h1 id="gRPC-example"><a href="#gRPC-example" class="headerlink" title="gRPC example"></a>gRPC example</h1><h2 id="protocol-buffers"><a href="#protocol-buffers" class="headerlink" title="protocol buffers;"></a>protocol buffers;</h2><p>As we all know, gRPC service is defined using protocol buffers; If you want to know how to define a .proto file, you can go to [protocol buffer Developer Guide]（<a href="https://developers.google.com/protocol-buffers/docs/overview）" target="_blank" rel="noopener">https://developers.google.com/protocol-buffers/docs/overview）</a>, Here is our stream_algorithm.proto defination:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">syntax = &quot;proto3&quot;;</span><br><span class="line"></span><br><span class="line">// Interface exported by the server.</span><br><span class="line">service MyAlgorithmBrain &#123;</span><br><span class="line">    //get the rank of the item in real time</span><br><span class="line">    rpc MyRankOfStream(stream ItemRequest) returns (ItemResponse)&#123;&#125;</span><br><span class="line">    //get the structure of the sketch maintained in server</span><br><span class="line">    rpc SketchOfStream(stream ItemRequest) returns (ItemResponse)&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">message ItemRequest &#123;</span><br><span class="line"></span><br><span class="line">    int32 id = 1;  </span><br><span class="line">    int32 value = 2;</span><br><span class="line">    string timestamp = 3;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">message ItemResponse &#123;</span><br><span class="line">    float rank = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Generate-gRPC-code"><a href="#Generate-gRPC-code" class="headerlink" title="Generate gRPC code"></a>Generate gRPC code</h2><p>Next we need to update the gRPC code used by our application to use the new service definition.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m grpc_tools.protoc -I../../protos --python_out=. --grpc_python_out=. ../../protos/stream_algorithm.proto</span><br></pre></td></tr></table></figure></p>
+<p>This regenerates stream_algorithm_pb2.py which contains our generated request and response classes and stream_algorithm_pb2_grpc.py which contains our generated client and server classes.</p>
+<h2 id="Write-the-client-and-the-server-code"><a href="#Write-the-client-and-the-server-code" class="headerlink" title="Write the client and the server code"></a>Write the client and the server code</h2><p>Before we write the client code, we think about how to get the data, in this case, we use the local data, which are stored in the txt, and we read the file, every line is every input data.</p>
+<p>the nums.txt is going to be like this:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">1918,1520882120.0043917</span><br><span class="line">9732,1520882120.01238</span><br><span class="line">2657,1520882120.01238</span><br><span class="line">5164,1520882120.01238</span><br><span class="line">5708,1520882120.01238</span><br><span class="line">4403,1520882120.01238</span><br><span class="line">1870,1520882120.01238</span><br><span class="line">3729,1520882120.01238</span><br><span class="line">9145,1520882120.01238</span><br><span class="line">5544,1520882120.0133848</span><br><span class="line">747,1520882120.0133848</span><br><span class="line">4681,1520882120.0133848</span><br><span class="line">6552,1520882120.0133848</span><br><span class="line">5737,1520882120.0133848</span><br><span class="line">885,1520882120.0133848</span><br><span class="line">1467,1520882120.0133848</span><br></pre></td></tr></table></figure>
+<p>the first column is the value, the second column is the timestamp, and then we create a function to help us read the data:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">def read_route_guide_database():</span><br><span class="line">    &quot;&quot;&quot;Reads the numbers database.</span><br><span class="line"></span><br><span class="line">  Returns:</span><br><span class="line">    The full contents of the route guide database as a sequence of</span><br><span class="line">      stream_algorithm_pb2.Features.</span><br><span class="line">  &quot;&quot;&quot;</span><br><span class="line">    feature_list = []</span><br><span class="line">    file = open(&quot;nums.txt&quot;, &quot;r&quot;)</span><br><span class="line">    count = 0</span><br><span class="line">    for line in file:</span><br><span class="line">        array = line.split(&apos;,&apos;)</span><br><span class="line">        feature = stream_algorithm_pb2.ItemRequest(</span><br><span class="line">            id=count,</span><br><span class="line">            value=int(array[0]),</span><br><span class="line">            timestamp=array[1]</span><br><span class="line">        )</span><br><span class="line">        count += 1</span><br><span class="line">        feature_list.append(feature)</span><br><span class="line">    return feature_list</span><br></pre></td></tr></table></figure></p>
+<p>Next is the client part:<br>First, create a channel defined by the ip and the port, Next, create the stub based on the channel. Then, recall the stub function, like stub.MyRankOfStream( iter(algorithm_resources.read_route_guide_database())), don’t forget the iter before the input data.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">def run():</span><br><span class="line">    channel = grpc.insecure_channel(&apos;localhost:50052&apos;)</span><br><span class="line">    stub = stream_algorithm_pb2_grpc.MyAlgorithmBrainStub(channel)</span><br><span class="line">    # print(algorithm_resources.read_route_guide_database())</span><br><span class="line">    response = stub.MyRankOfStream( iter(algorithm_resources.read_route_guide_database()))</span><br><span class="line">    print(&quot;get the rank infomation from the server&quot; , response)</span><br></pre></td></tr></table></figure></p>
+<p>The server part:<br>We create the MyRankOfStream function, and import the kll algorithm module, which can store the data distribution in a small space. The response is rank of the last item of the input data.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">class MyAlgorithmBrainServicer(stream_algorithm_pb2_grpc.MyAlgorithmBrainServicer):</span><br><span class="line">    &quot;&quot;&quot;docstring for MyAlgorithmBrainServicer.&quot;&quot;&quot;</span><br><span class="line">    def __init__(self):</span><br><span class="line">        super(MyAlgorithmBrainServicer, self).__init__()</span><br><span class="line">        #self.db = arg</span><br><span class="line"></span><br><span class="line">    def MyRankOfStream(self, request_iterator, context):</span><br><span class="line">        # for new_note in request_iterator:</span><br><span class="line">        #     yield new_note.value</span><br><span class="line">        kll_algorithm = kll.KLL(128, 500)</span><br><span class="line">        sum = 0</span><br><span class="line"></span><br><span class="line">        for new_note in request_iterator:</span><br><span class="line">            #sum += new_note.value</span><br><span class="line">            kll_algorithm.update(new_note)</span><br><span class="line">            lastItem = new_note</span><br><span class="line">        res = stream_algorithm_pb2.ItemResponse(</span><br><span class="line">            rank = kll_algorithm.rank(lastItem)</span><br><span class="line">        )</span><br><span class="line">        return res</span><br><span class="line">def serve():</span><br><span class="line">    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))</span><br><span class="line">    stream_algorithm_pb2_grpc.add_MyAlgorithmBrainServicer_to_server(</span><br><span class="line">        MyAlgorithmBrainServicer(), server)</span><br><span class="line"></span><br><span class="line">    server.add_insecure_port(&apos;[::]:50052&apos;)</span><br><span class="line">    server.start()</span><br><span class="line">    try:</span><br><span class="line">        while True:</span><br><span class="line">            time.sleep(_ONE_DAY_IN_SECONDS)</span><br><span class="line">    except Exception as e:</span><br><span class="line">        server.stop(0)</span><br><span class="line"></span><br><span class="line">if __name__ == &apos;__main__&apos;:</span><br><span class="line">    serve()</span><br></pre></td></tr></table></figure></p>
+<p>If you want run this server in the docker, you can just use this line below:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -itd --rm --name server -v &quot;$PWD&quot;:/usr/src/myapp -w /usr/src/myapp grpc/python:1.4 python server.py</span><br></pre></td></tr></table></figure></p>
+<p>see what kind of containers do we have<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker ps -a</span><br></pre></td></tr></table></figure></p>
+<p>and see the details of our container, ddd8e8286103 is our container id. and the most important thing we are going to find is the ip address of our container.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker inspect ddd8e8286103</span><br></pre></td></tr></table></figure></p>
+<p>we got “IPAddress”: “172.17.0.2”, so we need to change our client code<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">channel = grpc.insecure_channel(&apos;172.17.0.2:50052&apos;)</span><br></pre></td></tr></table></figure></p>
+<p>The last one is that we <code>docker attach server</code> get into the server container, and  <code>python client.py</code> to start the client.</p>
 
       
     </div>
@@ -343,13 +330,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018-02-20-Q-Digest.html">Q-Digest 算法简介</a></p>
+        <p><span>本文标题:</span><a href="/2018-03-20-grpc.html">gRPC example in Docker</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">斯沃德 (Titanssword)</a></p>
-        <p><span>发布时间:</span>2018-02-20, 00:00:37</p>
-        <p><span>最后更新:</span>2018-02-20, 06:03:59</p>
+        <p><span>发布时间:</span>2018-03-20, 00:28:08</p>
+        <p><span>最后更新:</span>2018-03-20, 07:28:08</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2018-02-20-Q-Digest.html" title="Q-Digest 算法简介">https://github.com/Titanssword/2018-02-20-Q-Digest.html</a>
-            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-02-20-Q-Digest.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2018-03-20-grpc.html" title="gRPC example in Docker">https://github.com/Titanssword/2018-03-20-grpc.html</a>
+            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-03-20-grpc.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
     </div>
@@ -358,16 +345,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018-02-20-hello-world.html">
-                    Hello World
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2018-02-20-Introduction_Sketch_Program.html">
-                    Fast, Approximate Analysis of Big Data
+                <a href="/2018-03-19-dock_intro.html">
+                    Docker introduction
                 </a>
             </div>
         
@@ -380,7 +361,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#introduction"><span class="toc-number">1.</span> <span class="toc-text">introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#example"><span class="toc-number">2.</span> <span class="toc-text">example</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#requirement"><span class="toc-number">3.</span> <span class="toc-text">requirement</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#论文中的实例"><span class="toc-number">4.</span> <span class="toc-text">论文中的实例</span></a></li></ol>
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#gRPC-example"><span class="toc-number">1.</span> <span class="toc-text">gRPC example</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#protocol-buffers"><span class="toc-number">1.1.</span> <span class="toc-text">protocol buffers;</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Generate-gRPC-code"><span class="toc-number">1.2.</span> <span class="toc-text">Generate gRPC code</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Write-the-client-and-the-server-code"><span class="toc-number">1.3.</span> <span class="toc-text">Write the client and the server code</span></a></li></ol></li></ol>
         
     </div>
     <style>
@@ -416,7 +397,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"Q-Digest 算法简介　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"gRPC example in Docker　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -436,15 +417,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2018-02-20-hello-world.html" title="上一篇: Hello World">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2018-02-20-Introduction_Sketch_Program.html" title="下一篇: Fast, Approximate Analysis of Big Data">
+            <a href="/2018-03-19-dock_intro.html" title="下一篇: Docker introduction">
                 <i class="fa fa-angle-right"></i>
             </a>
         

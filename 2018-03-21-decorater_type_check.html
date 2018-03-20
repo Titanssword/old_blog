@@ -15,28 +15,18 @@
 
 
 
-<meta name="description" content="Bloom Filter 用来匹配是否出现过，Count-Min Sketch 用来计算一个 item 出现的次数, 两者都使用了 Hash 的思想">
-<meta name="keywords" content="Stream,Summary">
+<meta name="description" content="Type hint and type checker">
+<meta name="keywords" content="Python,Static Type,Type Hint">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Bloom Filter 和　Count-Min Sketch 介绍">
-<meta property="og:url" content="https://github.com/Titanssword/2018-02-20-Bloom Filter and Count-Min Sketch.html">
+<meta property="og:title" content="Implementing Type Checker in Python3">
+<meta property="og:url" content="https://github.com/Titanssword/2018-03-21-decorater_type_check.html">
 <meta property="og:site_name" content="斯沃德的小博客">
-<meta property="og:description" content="Bloom Filter 用来匹配是否出现过，Count-Min Sketch 用来计算一个 item 出现的次数, 两者都使用了 Hash 的思想">
+<meta property="og:description" content="Type hint and type checker">
 <meta property="og:locale" content="zh,english">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-17-24.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-17-43.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-17-59.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-32-54.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-10.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-22.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-30.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot from 2018-02-20 06-33-42.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-51.png">
-<meta property="og:updated_time" content="2018-02-19T22:55:04.581Z">
+<meta property="og:updated_time" content="2018-03-20T18:48:05.243Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Bloom Filter 和　Count-Min Sketch 介绍">
-<meta name="twitter:description" content="Bloom Filter 用来匹配是否出现过，Count-Min Sketch 用来计算一个 item 出现的次数, 两者都使用了 Hash 的思想">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-17-24.png">
+<meta name="twitter:title" content="Implementing Type Checker in Python3">
+<meta name="twitter:description" content="Type hint and type checker">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -68,7 +58,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>Bloom Filter 和　Count-Min Sketch 介绍 | 斯沃德的小博客</title>
+<title>Implementing Type Checker in Python3 | 斯沃德的小博客</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -273,11 +263,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap"><article id="post-Bloom Filter and Count-Min Sketch" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-decorater_type_check" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018-02-20-Bloom Filter and Count-Min Sketch.html" class="article-date">
-      <time datetime="2018-02-19T23:00:36.761Z" itemprop="datePublished">2018-02-20</time>
+      <a href="/2018-03-21-decorater_type_check.html" class="article-date">
+      <time datetime="2018-03-20T18:48:05.243Z" itemprop="datePublished">2018-03-20</time>
 </a>
 
 
@@ -292,7 +282,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Bloom Filter 和　Count-Min Sketch 介绍
+      Implementing Type Checker in Python3
     </h1>
   
 
@@ -301,13 +291,13 @@
       <div class="article-info article-info-post">
         
     <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/paper/">paper</a>
+    <a class="article-category-link" href="/categories/implement/">implement</a>
     </div>
 
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Stream/">Stream</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Summary/">Summary</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Python/">Python</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Static-Type/">Static Type</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Type-Hint/">Type Hint</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -317,44 +307,31 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h1 id="Bloom-Filter"><a href="#Bloom-Filter" class="headerlink" title="Bloom Filter"></a>Bloom Filter</h1><h2 id="introduction"><a href="#introduction" class="headerlink" title="introduction"></a>introduction</h2><p>首先，我们假设有四种存储设备，分别是 Tape, HDD, SSD, Memory．当然，我们知道，这四种设备的响应速度是按顺序递增的，也就是说 Memory 的速度最快，当然，我们都希望所有的程序都可以跑在 Memory 中，但是这四种设备的存储大小即容量也是不一样的，价格也是随之递增的．Ex .g 当我们在 Java 中使用 Set 类型去存储数据的时候，数据越多，查询所需的时间越长，同时 Jvm heap 也越大．实际生产环境中的数据量极大，在一些实时性要求比较高的应用当中，不可能将所有的数据都放在 Memory 中，当允许一定的误差的情况下，（即使用准确性去换取实时性，这是一种 tradeoff）这里就提出了，一种　Probabilistic　data structure，它可以在一定程度上去接受一定的误差，从而使响应速度加快，所要存储的数据也大大缩小．</p>
-<p>Bloom Filter 的概念提出的比较早，早在１９７０年就由一个叫 Bloom（真的叫这个名字）的人在一篇名为＂Space / Time trade-offs in hash coding with allowable errors＂</p>
-<h2 id="structure"><a href="#structure" class="headerlink" title="structure"></a>structure</h2><ol>
-<li><p>Initial the structure<br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-17-24.png" alt="Initial"></p>
-</li>
-<li><p>Add an element to this structure<br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-17-43.png" alt="add"></p>
-</li>
-<li><p>query 判断存在还是不存在<br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-17-59.png" alt="query"></p>
-</li>
-</ol>
-<p>If one hash function map to 0, It means NO!（　有一个 map 到０　就不行）<br>But if all hash functions map to 1, it means maybe YES(即使　所有的 hash 函数都能 map 到１，　也不能说明就一定存在，　这里有一定的 false positive，　即认为是正确的，但实际上不是正确的概率)</p>
-<h2 id="use-cases"><a href="#use-cases" class="headerlink" title="use cases"></a>use cases</h2><ol>
-<li>one hit wonders</li>
-<li>avoiding lookups</li>
-<li>real-time matching</li>
-</ol>
-<h1 id="Count-Min-Sketch"><a href="#Count-Min-Sketch" class="headerlink" title="Count-Min Sketch"></a>Count-Min Sketch</h1><h2 id="introduction-1"><a href="#introduction-1" class="headerlink" title="introduction"></a>introduction</h2><p>Count-min Sketch 是一个概率数据结构，用作数据流中事件的频率表。它使用散列函数将事件映射到频率，但与散列表不同，散列表仅使用子线性空间，但会因过多计算冲突导致的某些事件。</p>
-<p>Count-min Sketch 本质上与 Fan 等人在 1998 年引入的计数 Bloom filter 相同的数据结构. 但是，它们的使用方式各不相同，因此尺寸也有所不同：计数最小草图通常具有次线性单元数，与草图的所需近似质量有关，而计数 Bloom filter 的大小通常与其中的元素数集合。</p>
-<p>Main aim is to count things, how many times have i seen an element</p>
-<h2 id="structure-1"><a href="#structure-1" class="headerlink" title="structure"></a>structure</h2><p>实际的草图数据结构是 w 列和 d 行的二维数组。参数 w 和 d 在创建草图时是固定的，并确定时间和空间需求以及在查询频率或内部产品草图时的错误概率。与每个 d 行相关联的是一个单独的散列函数; 哈希函数必须是成对独立的。参数 w 和 d 可以通过设置 w =⌈e/ε⌉和 d =⌈ln1 /δ⌉来选择，其中在回答查询时的误差在概率为 1 - δ的附加系数ε内（见下文） ，e 是欧拉数。</p>
-<ol>
-<li>结构图</li>
-</ol>
-<p><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-32-54.png" alt="structure"><br>对于 Hash Function 的要求，可以是最简单的 hash function ，但所有的 hash function 必须不同．</p>
-<ol>
-<li>添加元素<br>当一个新的类型 i 事件到达时，我们更新如下：对于表中的每一行 j，应用相应的散列函数来获得列索引 k = hj（i）。然后将第 j 行第 k 列中的值加 1。<br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-10.png" alt="add one element "><br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-22.png" alt="add the same element"><br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-30.png" alt="add a different element"></li>
-<li><p>查询（统计元素个数）</p>
-<p>The estimated count is given by the least value in the table for i, namely {\displaystyle {\hat {a}}<em>{i}=\min </em>{j}\mathrm {count} [j,h<em>{j}(i)]} {\hat  a}</em>{i}=\min <em>{j}{\mathrm  {count}}[j,h</em>{j}(i)], where {\displaystyle \mathrm {count} } {\mathrm  {count}} is the table.<br>就是取最小的 count 作为 element 出现的次数，故名 count－min<br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot from 2018-02-20 06-33-42.png" alt="query1"><br><img src="https://raw.githubusercontent.com/Titanssword/Notes/master/pic/bloomfilter%20and%20CMS/Screenshot%20from%202018-02-20%2006-33-51.png" alt="query2"></p>
-</li>
-</ol>
-<h2 id="Probabilistic-problem"><a href="#Probabilistic-problem" class="headerlink" title="Probabilistic problem"></a>Probabilistic problem</h2><p>Epsilon: accepted error added to counts with each item<br>Delta: probability that estimate is outside accepted error</p>
-<h2 id="use-cases-1"><a href="#use-cases-1" class="headerlink" title="use cases"></a>use cases</h2><ol>
-<li>any kind of frequency tracking</li>
-<li>NLP (word count)</li>
-<li>Extension heavy-hitters</li>
-<li>range-query</li>
-</ol>
-<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.youtube.com/watch?v=F7EhDBfsTA8&amp;t=2077s" target="_blank" rel="noopener">James Stanier 的演讲教程</a><br><a href="https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch" target="_blank" rel="noopener">wikipedia 解释</a><br><a href="http://hkorte.github.io/slides/cmsketch/" target="_blank" rel="noopener">Algorithms &amp; Data Challenges Berlin Meetup<br>Mar 19, 2013 PPT </a><br><a href="utgers.edu/~graham/pubs/papers/cm-full.pdf">An Improved Data Stream Summary: The Count-Min Sketch and Its Applications</a></p>
+        <h1 id="Type-hint-and-type-checker"><a href="#Type-hint-and-type-checker" class="headerlink" title="Type hint and type checker"></a>Type hint and type checker</h1><h2 id="introduction"><a href="#introduction" class="headerlink" title="introduction"></a>introduction</h2><p>As we all know, python is a dynamic language and dynamic typing can be flexible, powerful, convenient and easy. But with your project growing, dynamic typing is not always the best approach. As an opposite, static typing can make programs easier to understand and maintain.</p>
+<ul>
+<li>Type declarations can serve as machine-checked documentation. This is important as code is typically read much more often than modified, and this is especially important for large and complex programs.</li>
+<li>Static typing can help you find bugs earlier and with less testing and debugging. Especially in large and complex projects this can be a major time-saver.</li>
+<li>Static typing can help you find difficult-to-find bugs before your code goes into production. This can improve reliability and reduce the number of security issues.</li>
+<li>Static typing makes it practical to build very useful development tools that can improve programming productivity or software quality, including IDEs with precise and reliable code completion, static analysis tools, etc.</li>
+<li>You can get the benefits of both dynamic and static typing in a single language. Dynamic typing can be perfect for a small project or for writing the UI of your program, for example. As your program grows, you can adapt tricky application logic to static typing to help maintenance.</li>
+</ul>
+<p><a href="https://www.python.org/dev/peps/pep-3107/" target="_blank" rel="noopener">PEP 3107</a> introduces a syntax for adding arbitrary metadata annotations to Python functions. Annotations for parameters take the form of optional expressions that follow the parameter name:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def foo(a: expression, b: expression = 5):</span><br></pre></td></tr></table></figure></p>
+<p> <a href="https://www.python.org/dev/peps/pep-0484/#abstract" target="_blank" rel="noopener">PEP484</a> introduces a provisional module to provide these standard definitions and tools, along with some conventions for situations where annotations are not available.<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">def greeting(name: str) -&gt; str:</span><br><span class="line">   return &apos;Hello &apos; + name</span><br></pre></td></tr></table></figure></p>
+<p> While these annotations are available at runtime through the usual <strong>annotations</strong> attribute, no automatic type checking happens at runtime. Instead, it is assumed that a separate off-line type checker (e.g. mypy) will be used for on-demand source code analysis.</p>
+<p>Until Now, there is no specific methods to do the type check only some tools such as <code>mypy</code>, <code>PyCharm</code>. So here, we use create a simple type checker.</p>
+<h2 id="implement"><a href="#implement" class="headerlink" title="implement"></a>implement</h2><p>Firstly, we have a simple function. This is the normal one.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">def gcd(a, b):</span><br><span class="line">    &apos;&apos;&apos;Return the greatest common divisor of a and b.&apos;&apos;&apos;</span><br><span class="line">    a = abs(a)</span><br><span class="line">    b = abs(b)</span><br><span class="line">    if a &lt; b:</span><br><span class="line">        a, b = b, a</span><br><span class="line">    while b != 0:</span><br><span class="line">        a, b = b, a % b</span><br><span class="line">    return a</span><br></pre></td></tr></table></figure></p>
+<p>In this example, we consider a and b are both <code>int</code> type. Then, we add the annotations to the function <code>gcd</code>.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def gcd(a: int, b: int) -&gt; int:</span><br></pre></td></tr></table></figure></p>
+<p>we can use <code>gcd.__annotations__</code> to get the information.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gcd.__annotations__</span><br><span class="line">&#123;&apos;return&apos;: &lt;class &apos;int&apos;&gt;, &apos;b&apos;: &lt;class &apos;int&apos;&gt;, &apos;a&apos;: &lt;class &apos;int&apos;&gt;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>then we create a decorater – <code>_type_check.py</code>  , the basic idea is that using <code>isinstance</code> method to test all the types in the annotations with the real types. If it doesn’t match, alert some error message.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">import functools</span><br><span class="line">def typecheck(f):</span><br><span class="line">    @functools.wraps(f)</span><br><span class="line">    def wrapper(*args, **kwargs):</span><br><span class="line">        print(&quot;hello the _type_check&quot;)</span><br><span class="line">        for i, arg in enumerate(args[:f.__code__.co_nlocals]):</span><br><span class="line">            name = f.__code__.co_varnames[i]</span><br><span class="line">            expected_type = f.__annotations__.get(name, None)</span><br><span class="line">            if expected_type and not isinstance(arg, expected_type):</span><br><span class="line">                raise RuntimeError(&quot;error: Argument &#123;&#125; to &apos;&#123;&#125;&apos; has incompatible type &apos;&#123;&#125;&apos; ; expected &apos;&#123;&#125;&apos;&quot;.format( i+1 , f.__name__, type(arg).__name__, expected_type.__name__))</span><br><span class="line">                # raise RuntimeError(&quot;&#123;&#125; should be of type &#123;&#125;; &#123;&#125; specified&quot;.format(name, expected_type.__name__, type(arg).__name__))</span><br><span class="line">        for name, arg in kwargs.items():</span><br><span class="line">            expected_type = f.__annotations__.get(name, None)</span><br><span class="line">            if expected_type and not isinstance(arg, expected_type):</span><br><span class="line">                raise RuntimeError(&quot;error: Argument &#123;&#125; to &apos;&#123;&#125;&apos; has incompatible type &apos;&#123;&#125;&apos; ; expected &apos;&#123;&#125;&apos;&quot;.format( i+1 , f.__name__, type(arg).__name__, expected_type.__name__))</span><br><span class="line">        result = f(*args, **kwargs)</span><br><span class="line">        return_type = f.__annotations__.get(&apos;return&apos;, None)</span><br><span class="line">        if return_type and not isinstance(result, return_type):</span><br><span class="line">            raise RuntimeError(&quot;&#123;&#125; should return &#123;&#125;&quot;.format(f.__name__, return_type.__name__))</span><br><span class="line">        return result</span><br><span class="line">    return wrapper</span><br></pre></td></tr></table></figure></p>
+<p>Now, the gcd.py is going to be like this:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">from _type_check import typecheck</span><br><span class="line"></span><br><span class="line">@typecheck</span><br><span class="line">def gcd(a: float, b: float) -&gt; int:</span><br><span class="line">    &apos;&apos;&apos;Return the greatest common divisor of a and b.&apos;&apos;&apos;</span><br><span class="line">    a = abs(a)</span><br><span class="line">    b = abs(b)</span><br><span class="line">    if a &lt; b:</span><br><span class="line">        a, b = b, a</span><br><span class="line">    while b != 0:</span><br><span class="line">        a, b = b, a % b</span><br><span class="line">    return a</span><br></pre></td></tr></table></figure></p>
+<p>In the end, we create some test:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">from gcd import gcd</span><br><span class="line">gcd(2,3)</span><br><span class="line">gcd(2.2,3.3)</span><br></pre></td></tr></table></figure></p>
+<p>we can get the result below, which report some details about the wrong type.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">RuntimeError: error: Argument 1 to &apos;gcd&apos; has incompatible type &apos;int&apos; ; expected &apos;float&apos;</span><br><span class="line">RuntimeError: error: Argument 2 to &apos;gcd&apos; has incompatible type &apos;str&apos; ; expected &apos;float&apos;</span><br></pre></td></tr></table></figure></p>
+<h2 id="conclusion"><a href="#conclusion" class="headerlink" title="conclusion"></a>conclusion</h2><p>This method just a simple type check, which can do the basic things – comparing the annotation types with the real types and reporting the wrong messages. It is obviously that it has a lot of things to do compared with the famous type checker tool <code>mypy</code>, Such as:</p>
+<ul>
+<li>how to deal with the extra parameters</li>
+<li>how to support several types</li>
+<li>Here we use the raise RuntimeError to report the error, it means when it met the error, it will stop. Is there some better method to log the messages.</li>
+</ul>
 
       
     </div>
@@ -363,13 +340,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018-02-20-Bloom Filter and Count-Min Sketch.html">Bloom Filter 和　Count-Min Sketch 介绍</a></p>
+        <p><span>本文标题:</span><a href="/2018-03-21-decorater_type_check.html">Implementing Type Checker in Python3</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">斯沃德 (Titanssword)</a></p>
-        <p><span>发布时间:</span>2018-02-20, 00:00:36</p>
-        <p><span>最后更新:</span>2018-02-20, 06:55:04</p>
+        <p><span>发布时间:</span>2018-03-20, 19:48:05</p>
+        <p><span>最后更新:</span>2018-03-21, 02:48:05</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2018-02-20-Bloom Filter and Count-Min Sketch.html" title="Bloom Filter 和　Count-Min Sketch 介绍">https://github.com/Titanssword/2018-02-20-Bloom Filter and Count-Min Sketch.html</a>
-            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-02-20-Bloom Filter and Count-Min Sketch.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2018-03-21-decorater_type_check.html" title="Implementing Type Checker in Python3">https://github.com/Titanssword/2018-03-21-decorater_type_check.html</a>
+            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-03-21-decorater_type_check.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
     </div>
@@ -378,12 +355,12 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018-02-20-DataSketches Research Directions.html">
-                    DataSketches Research Directions
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018-03-20-grpc.html">
+                    gRPC example in Docker
                 </a>
             </div>
-        
         
     </nav>
 
@@ -394,7 +371,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Bloom-Filter"><span class="toc-number">1.</span> <span class="toc-text">Bloom Filter</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#introduction"><span class="toc-number">1.1.</span> <span class="toc-text">introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#structure"><span class="toc-number">1.2.</span> <span class="toc-text">structure</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#use-cases"><span class="toc-number">1.3.</span> <span class="toc-text">use cases</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Count-Min-Sketch"><span class="toc-number">2.</span> <span class="toc-text">Count-Min Sketch</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#introduction-1"><span class="toc-number">2.1.</span> <span class="toc-text">introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#structure-1"><span class="toc-number">2.2.</span> <span class="toc-text">structure</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Probabilistic-problem"><span class="toc-number">2.3.</span> <span class="toc-text">Probabilistic problem</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#use-cases-1"><span class="toc-number">2.4.</span> <span class="toc-text">use cases</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考"><span class="toc-number">3.</span> <span class="toc-text">参考</span></a></li></ol>
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Type-hint-and-type-checker"><span class="toc-number">1.</span> <span class="toc-text">Type hint and type checker</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#introduction"><span class="toc-number">1.1.</span> <span class="toc-text">introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#implement"><span class="toc-number">1.2.</span> <span class="toc-text">implement</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#conclusion"><span class="toc-number">1.3.</span> <span class="toc-text">conclusion</span></a></li></ol></li></ol>
         
     </div>
     <style>
@@ -430,7 +407,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"Bloom Filter 和　Count-Min Sketch 介绍　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"Implementing Type Checker in Python3　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -450,15 +427,15 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2018-02-20-DataSketches Research Directions.html" title="上一篇: DataSketches Research Directions">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+            <a href="/2018-03-20-grpc.html" title="下一篇: gRPC example in Docker">
+                <i class="fa fa-angle-right"></i>
+            </a>
         
     </div>
 

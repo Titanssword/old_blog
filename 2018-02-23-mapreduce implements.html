@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh,english">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="斯沃德 (Titanssword)" />
+
+
+
+<meta name="description" content="The report about the MIT 6.824 Lab1">
+<meta name="keywords" content="Go,MIT,Distributed System">
+<meta property="og:type" content="article">
+<meta property="og:title" content="This is the implementation of 6.824 Lab1 MapReduce">
+<meta property="og:url" content="https://github.com/Titanssword/2018-02-23-mapreduce implements.html">
+<meta property="og:site_name" content="斯沃德的小博客">
+<meta property="og:description" content="The report about the MIT 6.824 Lab1">
+<meta property="og:locale" content="zh,english">
+<meta property="og:updated_time" content="2018-01-19T23:11:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="This is the implementation of 6.824 Lab1 MapReduce">
+<meta name="twitter:description" content="The report about the MIT 6.824 Lab1">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="斯沃德的小博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>This is the implementation of 6.824 Lab1 MapReduce | 斯沃德的小博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: 
+    }
+</script>
+
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">斯沃德 (Titanssword)</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">keep learning, keep living, keep coding</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>Menu</li>
+                        <li>Tags</li>
+                        
+                        <li>Friends</li>
+                        
+                        
+                        <li>About Me</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DataSketches/">DataSketches</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GK/">GK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go/">Go</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT/">MIT</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Priority/">Priority</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Q-digest/">Q-digest</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Real-time/">Real time</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Static-Type/">Static Type</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Stream/">Stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Summary/">Summary</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Type-Hint/">Type Hint</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Yahoo/">Yahoo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/contrainer/">contrainer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-processing/">data processing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-stream/">data stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/example/">example</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gRPC/">gRPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/google/">google</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quantile-problem/">quantile problem</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/scheduling/">scheduling</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/stream-algorithm-implement/">stream algorithm implement</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">专注于前端</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">keep learning, keep living, keep coding</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="Tags" friends="Friends" about="About Me"/>
+</nav>
+      <div class="body-wrap"><article id="post-mapreduce implements" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018-02-23-mapreduce implements.html" class="article-date">
+      <time datetime="2018-02-23T07:18:34.550Z" itemprop="datePublished">2018-02-23</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      This is the implementation of 6.824 Lab1 MapReduce
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Distributed-System/">Distributed System</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Go/">Go</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MIT/">MIT</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h3 id="Part-1-Map-Reduce-and-output"><a href="#Part-1-Map-Reduce-and-output" class="headerlink" title="Part 1: Map/Reduce and output"></a>Part 1: Map/Reduce and output</h3><ul>
+<li>What you have to do is to finish the two function doMap() and doReduce()</li>
+<li><p>Each call to doMap() reads the appropriate file, calls the map function on that file’s contents, and writes the resulting key/value pairs to nReduce intermediate files. doMap() hashes each key to pick the intermediate file and thus the reduce task that will process the key. There will be nMap x nReduce files after all map tasks are done. Each file name contains a prefix, the map task number, and the reduce task number. If there are two map tasks and three reduce tasks, the map tasks will create these six intermediate files:</p>
+<blockquote>
+<p>mrtmp.xxx-0-0<br>mrtmp.xxx-0-1<br>mrtmp.xxx-0-2<br>mrtmp.xxx-1-0<br>mrtmp.xxx-1-1<br>mrtmp.xxx-1-2</p>
+</blockquote>
+</li>
+<li><p>The MapFunc ode and explanation are below</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">// first read the inFile and trasfer the results to the String</span><br><span class="line">bytes, err := ioutil.ReadFile(inFile)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    log.Fatalf(&quot;err: %s&quot;, err)</span><br><span class="line">&#125;</span><br><span class="line">// in this part mapF() in the test_test.go. It Split the (inFile, bytes) in words, and get []KeyValue</span><br><span class="line">// so we use a new Key structure to store the []KeyValue</span><br><span class="line">kvs := mapF(inFile, string(bytes))</span><br><span class="line">// This is standard use that can transfer the structure into JSON</span><br><span class="line">encoders := make([]*json.Encoder, nReduce);</span><br><span class="line">// for one input file, we need to generate *nReduce* output files for the reduce job</span><br><span class="line">// so in this part we create *nReduce* Encoders, which are stored in the encoders, the</span><br><span class="line">// file name is also generated by the reduceName provided by the MIT</span><br><span class="line">for reduceTaskNumber := 0; reduceTaskNumber &lt; nReduce; reduceTaskNumber++ &#123;</span><br><span class="line">    filename := reduceName(jobName, mapTaskNumber, reduceTaskNumber)</span><br><span class="line">    // Create() 默认权限 0666</span><br><span class="line">    file_ptr, err := os.Create(filename)</span><br><span class="line">    if (err != nil) &#123;</span><br><span class="line">        log.Fatal(&quot;Unable to create file: &quot;, filename)</span><br><span class="line">    &#125;</span><br><span class="line">    defer file_ptr.Close()</span><br><span class="line">    encoders[reduceTaskNumber] = json.NewEncoder(file_ptr);</span><br><span class="line">&#125;</span><br><span class="line">// now what we are going to do is to encode the kv structure into JSON,</span><br><span class="line">// Please Remember the use of it, here we use *&amp;kv*  -- *the pointer* to get the structure</span><br><span class="line">for _, kv := range kvs &#123;</span><br><span class="line">    key := kv.Key</span><br><span class="line">    HashedKey := int(ihash(key) % nReduce)</span><br><span class="line">    err := encoders[HashedKey].Encode(&amp;kv)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        fmt.Println(err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>And another version firstly came to my mind, which is very slow</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// In this version, we put the OpenFile method in the while of range kvs, in this way, we frequently</span><br><span class="line">// openfile, which will cause a lot of time, so the results is not good due to the poor computer, we</span><br><span class="line">// i also see someone&apos;s code is similar as this idea, maybe ther have a *great* computing environment.</span><br><span class="line">for _, kv := range kvs &#123;</span><br><span class="line">    key := kv.Key</span><br><span class="line">    HashedKey := int(ihash(key) % nReduce)</span><br><span class="line">    filename := reduceName(jobName, mapTaskNumber, HashedKey)</span><br><span class="line">    outputFile, _ := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)</span><br><span class="line">    enc := json.NewEncoder(outputFile)</span><br><span class="line">    //err := encoders[HashedKey].Encode(&amp;kv)</span><br><span class="line">    err := enc.Encode(&amp;kv)</span><br><span class="line">    fmt.Println(&quot;writing &quot;, key)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        fmt.Println(err)</span><br><span class="line">    &#125;</span><br><span class="line">    outputFile.Close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>the ReduceFunc code and explanation is below</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">kvMap := make(map[string]([]string))</span><br><span class="line">// file all the intermediate files and transfer the json into kv structure</span><br><span class="line">for mapNumber := 0; mapNumber &lt; nMap; mapNumber++ &#123;</span><br><span class="line">    filename := reduceName(jobName, mapNumber, reduceTaskNumber)</span><br><span class="line">    file, err := os.Open(filename)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        log.Fatal(&quot;err in open  file: %s&quot;, err)</span><br><span class="line">    &#125;</span><br><span class="line">    defer file.Close()</span><br><span class="line">    decoder := json.NewDecoder(file)</span><br><span class="line">    for &#123;</span><br><span class="line">        var kv KeyValue</span><br><span class="line">        if err := decoder.Decode(&amp;kv); err == io.EOF &#123;</span><br><span class="line">            break</span><br><span class="line">        &#125; else if err != nil &#123;</span><br><span class="line">            log.Fatal(err)</span><br><span class="line">        &#125;</span><br><span class="line">        //map append 方法</span><br><span class="line">        kvMap[kv.Key] = append(kvMap[kv.Key], kv.Value)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">// use keys to store all the word in the file, the length is how many words</span><br><span class="line">keys := make([]string, 0, len(kvMap))</span><br><span class="line">for k, _ := range kvMap &#123;</span><br><span class="line">    keys = append(keys, k)</span><br><span class="line">&#125;</span><br><span class="line">// just format, because the map structure is disordered</span><br><span class="line">sort.Strings(keys)</span><br><span class="line">// one reduce function generate one file which store the results of the reduceF</span><br><span class="line">// It is going to be like this: word, 4, hello, 5</span><br><span class="line">newFile , err2:= os.Create(mergeName(jobName, reduceTaskNumber))</span><br><span class="line">if err2 != nil &#123;</span><br><span class="line">    fmt.Println(&quot;reduce merge files: %s cant open &quot;, mergeName(jobName, reduceTaskNumber))</span><br><span class="line">    return</span><br><span class="line">&#125;</span><br><span class="line">enc := json.NewEncoder(newFile)</span><br><span class="line">for _, k := range keys &#123;</span><br><span class="line">    enc.Encode(KeyValue&#123;k, reduceF(k,  kvMap[k])&#125;)</span><br><span class="line">    //fmt.Println(&quot;reduceF results is  %s&quot;)</span><br><span class="line">    //fmt.Println(reduceF(k,  kvMap[k]))</span><br><span class="line">&#125;</span><br><span class="line">// finally don&apos;t forget the Close() if you open a file</span><br><span class="line">defer newFile.Close()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>finally you need run this code to check the correctness.</p>
+</li>
+</ul>
+<blockquote>
+<p>cd 6.824<br>export “GOPATH=$PWD”  # go needs $GOPATH to be set to the project’s working directory<br>cd “$GOPATH/src/mapreduce”<br>go test -run Sequential</p>
+</blockquote>
+<h3 id="Part-2-Single-worker-word-count"><a href="#Part-2-Single-worker-word-count" class="headerlink" title="Part 2 Single-worker word count"></a>Part 2 Single-worker word count</h3><ul>
+<li><p>Now you will implement word count — a simple Map/Reduce example. Look in main/wc.go; you’ll find      empty mapF() and reduceF() functions. Your job is to insert code so that wc.go reports the number of occurrences of each word in its input. A word is any contiguous sequence of letters, as determined by unicode.IsLetter.</p>
+</li>
+<li><p>this mapF function is similar in the test_test.go that we use to split the strings into words</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// the point of this function is the strings.FieldsFunc which can divides the</span><br><span class="line">// string into []string with resect to the unicode.IsLetter</span><br><span class="line">func mapF(filename string, contents string) []mapreduce.KeyValue &#123;</span><br><span class="line">	words := strings.FieldsFunc(contents, func(r rune) bool &#123;</span><br><span class="line">		return !unicode.IsLetter(r)</span><br><span class="line">	&#125;)</span><br><span class="line">	var kv []mapreduce.KeyValue</span><br><span class="line">	// one word is representing 1 time</span><br><span class="line">	for _, word := range words &#123;</span><br><span class="line">		kv = append(kv, mapreduce.KeyValue&#123;Key: word, Value: &quot;1&quot;&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	return kv</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// simply just count the values length</span><br><span class="line">func reduceF(key string, values []string) string &#123;</span><br><span class="line">	return strconv.Itoa(len(values))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>You can test your solution using:</li>
+</ul>
+<blockquote>
+<p>cd “$GOPATH/src/main”<br><code>go run wc.go master sequential pg-*.txt</code></p>
+</blockquote>
+<ul>
+<li>The output will be in the file “mrtmp.wcseq”. Your implementation is correct if the following command produces the output shown here:</li>
+</ul>
+<blockquote>
+<p>sort -n -k2 mrtmp.wcseq | tail -10</p>
+<p>that: 7871<br>it: 7987<br>in: 8415<br>was: 8578<br>a: 13382<br>of: 13536<br>I: 14296<br>to: 16079<br>and: 23612<br>the: 29748</p>
+</blockquote>
+<h3 id="Part-3-Distributing-MapReduce-tasks"><a href="#Part-3-Distributing-MapReduce-tasks" class="headerlink" title="Part 3: Distributing MapReduce tasks"></a>Part 3: Distributing MapReduce tasks</h3><ul>
+<li><p>Your job is to implement schedule() in mapreduce/schedule.go. The master calls schedule() twice during a MapReduce job, once for the Map phase, and once for the Reduce phase. schedule()’s job is to hand out tasks to the available workers. There will usually be more tasks than worker threads, so schedule() must give each worker a sequence of tasks, one at a time. schedule() should wait until all tasks have completed, and then return.</p>
+</li>
+<li><p>schedule() learns about the set of workers by reading its registerChan argument. That channel yields a string for each worker, containing the worker’s RPC address. Some workers may exist before schedule() is called, and some may start while schedule() is running; all will appear on registerChan. schedule() should use all the workers, including ones that appear after it starts.</p>
+</li>
+<li><p>schedule() tells a worker to execute a task by sending a Worker.DoTask RPC to the worker. This RPC’s arguments are defined by DoTaskArgs in mapreduce/common_rpc.go. The File element is only used by Map tasks, and is the name of the file to read; schedule() can find these file names in mapFiles.</p>
+</li>
+<li><p>Use the call() function in mapreduce/common_rpc.go to send an RPC to a worker. The first argument is the the worker’s address, as read from registerChan. The second argument should be “Worker.DoTask”. The third argument should be the DoTaskArgs structure, and the last argument should be nil.</p>
+</li>
+<li><p>In this part you need to know some concepts</p>
+</li>
+</ul>
+<ol>
+<li>RPC package documents the Go RPC package.</li>
+<li>schedule() should send RPCs to the workers in parallel so that the workers can work on tasks concurrently. You will find the go statement useful for this purpose; see Concurrency in Go.<br>schedule() must wait for a worker to finish before it can give it another task. <em>Go routines</em></li>
+<li>You may find <em>Go’s channels</em> useful.<br>You may find <em>sync.WaitGroup</em> useful.</li>
+<li>The easiest way to track down bugs is to insert print state statements (perhaps calling debug() in common.go), collect the output in a file with go test -run TestBasic &gt; out, and then think about whether the output matches your understanding of how your code should behave. The last step (thinking) is the most important.</li>
+</ol>
+<h3 id="Part-4-Handling-worker-failures"><a href="#Part-4-Handling-worker-failures" class="headerlink" title="Part 4: Handling worker failures"></a>Part 4: Handling worker failures</h3><ul>
+<li><p>MapReduce makes this relatively easy because workers don’t have persistent state. If a worker fails, any RPCs that the master issued to that worker will fail (e.g., due to a timeout). Thus, if the master’s RPC to the worker fails, the master should re-assign the task given to the failed worker to another worker.</p>
+</li>
+<li><p>An RPC failure doesn’t necessarily mean that the worker didn’t execute the task; the worker may have executed it but the reply was lost, or the worker may still be executing but the master’s RPC timed out. Thus, it may happen that two workers receive the same task, compute it, and generate output. Two invocations of a map or reduce function are required to generate the same output for a given input (i.e. the map and reduce functions are “functional”), so there won’t be inconsistencies if subsequent processing sometimes reads one output and sometimes the other. In addition, the MapReduce framework ensures that map and reduce function output appears atomically: the output file will either not exist, or will contain the entire output of a single execution of the map or reduce function (the lab code doesn’t actually implement this, but instead only fails workers at the end of a task, so there aren’t concurrent executions of a task).</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">var wait_group sync.WaitGroup</span><br><span class="line">// firstly, we have nTasks, and our job is dividing these tasks into the worker by the call function</span><br><span class="line">for i:=0; i &lt; ntasks; i++ &#123;</span><br><span class="line">    wait_group.Add(1)</span><br><span class="line">    //struct of DoTaskArgs: the information of the job</span><br><span class="line">    var args DoTaskArgs</span><br><span class="line">    args.JobName = jobName</span><br><span class="line">    if phase == mapPhase &#123;</span><br><span class="line">        args.File = mapFiles[i]</span><br><span class="line">    &#125;</span><br><span class="line">    args.Phase = phase</span><br><span class="line">    args.TaskNumber = i</span><br><span class="line">    args.NumOtherPhase = n_other</span><br><span class="line">    reply := ShutdownReply&#123;0&#125;</span><br><span class="line">    // use go routines</span><br><span class="line">    go func ()  &#123;</span><br><span class="line">        defer wait_group.Done()</span><br><span class="line">        // keep runing until success</span><br><span class="line">        for &#123;</span><br><span class="line">            // all the worker is stored in the registerChan channel</span><br><span class="line">            worker := &lt;-registerChan</span><br><span class="line">            //func call(srv string, rpcname string, args interface&#123;&#125;, reply interface&#123;&#125;)</span><br><span class="line">            if (call(worker, &quot;Worker.DoTask&quot;, &amp;args, &amp;reply))&#123;</span><br><span class="line">                go func()&#123;registerChan &lt;- worker&#125; ()</span><br><span class="line">                break</span><br><span class="line">            &#125;</span><br><span class="line">            /*</span><br><span class="line">            // firstly i want to use this form, but it will go wrong when i want to add the</span><br><span class="line">            // else statement. i still don&apos;t know why</span><br><span class="line">            succeeded := call(worker, &quot;Worker.DoTask&quot;, &amp;args, &amp;reply)</span><br><span class="line">            if !succeeded &#123;</span><br><span class="line">                fmt.Println(&quot;RPC call ERROR *****************&quot;)</span><br><span class="line">            &#125;</span><br><span class="line">            else &#123;</span><br><span class="line">                fmt.Println(&quot;finished TaskNumber-&gt;&gt;&gt;&quot;,args.TaskNumber)</span><br><span class="line">            &#125;</span><br><span class="line">            */</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">// the finish</span><br><span class="line">wait_group.Wait()</span><br><span class="line">fmt.Printf(&quot;Schedule: %v phase done\n&quot;, phase)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>use below statement to test your code for the part 3</li>
+</ul>
+<blockquote>
+<p>go test -run TestBasic</p>
+</blockquote>
+<ul>
+<li>use below statement to test your code for the part 4<blockquote>
+<p>go test -run Failure</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Part-5-Inverted-index-generation"><a href="#Part-5-Inverted-index-generation" class="headerlink" title="Part 5: Inverted index generation"></a>Part 5: Inverted index generation</h3><ul>
+<li><p>Inverted indices are widely used in computer science, and are particularly useful in document searching. Broadly speaking, an inverted index is a map from interesting facts about the underlying data, to the original location of that data. For example, in the context of search, it might be a map from keywords to documents that contain those words.</p>
+</li>
+<li><p>We have created a second binary in main/ii.go that is very similar to the wc.go you built earlier. You should modify mapF and reduceF in main/ii.go so that they together produce an inverted index. Running ii.go should output a list of tuples, one per line, in the following format:</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ go run ii.go master sequential pg-*.txt</span><br><span class="line">$ head -n5 mrtmp.iiseq</span><br><span class="line"></span><br><span class="line">A: 8 pg-being_ernest.txt,pg-dorian_gray.txt,pg-frankenstein.txt,pg-grimm.txt,pg-huckleberry_finn.txt,pg-metamorphosis.txt,pg-sherlock_holmes.txt,pg-tom_sawyer.txt</span><br><span class="line">ABOUT: 1 pg-tom_sawyer.txt</span><br><span class="line">ACT: 1 pg-being_ernest.txt</span><br><span class="line">ACTRESS: 1 pg-dorian_gray.txt</span><br><span class="line">ACTUAL: 8 pg-being_ernest.txt,pg-dorian_gray.txt,pg-frankenstein.txt,pg-grimm.txt,pg-huckleberry_finn.txt,pg-metamorphosis.txt,pg-sherlock_holmes.txt,pg-tom_sawyer.txt</span><br></pre></td></tr></table></figure>
+<p>If it is not clear from the listing above, the format is:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">word: #documents documents,sorted,and,separated,by,commas</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><p>the mapF code and explanation are as BELOW:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">// The mapping function is called once for each piece of the input.</span><br><span class="line">// In this framework, the key is the name of the file that is being processed,</span><br><span class="line">// and the value is the file&apos;s contents. The return value should be a slice of</span><br><span class="line">// key/value pairs, each represented by a mapreduce.KeyValue.</span><br><span class="line"></span><br><span class="line">func mapF(document string, value string) (res []mapreduce.KeyValue) &#123;</span><br><span class="line">	// TODO: you should complete this to do the inverted index challenge</span><br><span class="line">	words := strings.FieldsFunc(value, func(r rune) bool &#123;</span><br><span class="line">		return !unicode.IsLetter(r)</span><br><span class="line">	&#125;)</span><br><span class="line">	// use DocMaps structure to store the word, inFile information</span><br><span class="line">	// word, doc1,</span><br><span class="line">	DocMaps := make(map[string]string)</span><br><span class="line">	var kv []mapreduce.KeyValue</span><br><span class="line">	// get the word from the words list and meanwhile we can get rid of the repeat word</span><br><span class="line">	// for this structure repeat word is not the times, it has no other information.</span><br><span class="line">	for _, word := range words &#123;</span><br><span class="line">		DocMaps[word] = document</span><br><span class="line">	&#125;</span><br><span class="line">	for k, docMap := range DocMaps &#123;</span><br><span class="line">		kv = append(kv, mapreduce.KeyValue&#123;k, docMap&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	return kv</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>the reduceF code and explanation are as BELOW:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">// The reduce function is called once for each key generated by Map, with a</span><br><span class="line">// list of that key&apos;s string value (merged across all inputs). The return value</span><br><span class="line">// should be a single output value for that key.</span><br><span class="line"></span><br><span class="line">func reduceF(key string, values []string) string &#123;</span><br><span class="line">	// TODO: you should complete this to do the inverted index challenge</span><br><span class="line">	//return strconv.Itoa(len(values))</span><br><span class="line">	// example doc1</span><br><span class="line">	//example2 doc2</span><br><span class="line">	nDoc := len(values)</span><br><span class="line">	// fisrt, sort, because the map is disordered</span><br><span class="line">	sort.Strings(values)</span><br><span class="line">	// and then put the []string into string</span><br><span class="line">	// be careful with the commas</span><br><span class="line">	resString := strconv.Itoa(nDoc) + &quot; &quot;</span><br><span class="line">	for _, v := range values &#123;</span><br><span class="line">		resString = resString + v + &quot;,&quot;</span><br><span class="line">	&#125;</span><br><span class="line">	lenString := len(resString)-1</span><br><span class="line">	return resString[:lenString]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="conclusion"><a href="#conclusion" class="headerlink" title="conclusion"></a>conclusion</h3><ul>
+<li>Firstly, i have to admit that this lab is quite difficult for me. It took me nearly one<br>week to finish it. I spent a lot of time to know and how to use GO, till now, I still have<br>some confusion about the go routines and the go channel. The structure of the code is awesome.<br>It also took me a long time in understanding the structure of the code, different parts have<br>different functions. But If you let me to create the whole MapReduce structure, I still don’t<br>the confidence to finish it. I start with the window platform, but later, I am stuck in the PRC part. I got a lot of problems in the use of PRC. So I turn to the Ubuntu. finally, I still have some problems in part 2, actually, I think the result is same as the given result, but when I run the test bash, it told me different. And the part 5, the answer is also failed, but I have seen a lot of code from the github, they are the same idea. I have a look of the <code>pg-*.txt</code>, they are different from previous years. So I am not going to figure out what is going wrong. By implementing the MapReduce key part, I have a new look of this useful processing structure. With respect to my own research, I am considering that I can put the Sketches algorithm into the MapReduce computing structre, every node get its own results of the data stream Sketches, and in the end, master node put them together and get a whole sketch of the data stream.</li>
+</ul>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>Title:</span><a href="/2018-02-23-mapreduce implements.html">This is the implementation of 6.824 Lab1 MapReduce</a></p>
+        <p><span>Author:</span><a href="/" title="Back to Homepage">斯沃德 (Titanssword)</a></p>
+        <p><span>Created:</span>2018-02-23, 08:18:34</p>
+        <p><span>Updated:</span>2018-01-20, 07:11:13</p>
+        <p>
+            <span>Full URL:</span><a class="post-url" href="/2018-02-23-mapreduce implements.html" title="This is the implementation of 6.824 Lab1 MapReduce">https://github.com/Titanssword/2018-02-23-mapreduce implements.html</a>
+            <span class="copy-path" data-clipboard-text="From https://github.com/Titanssword/2018-02-23-mapreduce implements.html　　By 斯沃德 (Titanssword)" title="Copy Article&#39;s Link &amp; Author"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018-02-23-Introduction_Sketch_Program.html">
+                    Fast, Approximate Analysis of Big Data
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018-02-23-hello-world.html">
+                    Hello World
+                </a>
+            </div>
+        
+    </nav>
+
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">Contents</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Part-1-Map-Reduce-and-output"><span class="toc-number">1.</span> <span class="toc-text">Part 1: Map/Reduce and output</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Part-2-Single-worker-word-count"><span class="toc-number">2.</span> <span class="toc-text">Part 2 Single-worker word count</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Part-3-Distributing-MapReduce-tasks"><span class="toc-number">3.</span> <span class="toc-text">Part 3: Distributing MapReduce tasks</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Part-4-Handling-worker-failures"><span class="toc-number">4.</span> <span class="toc-text">Part 4: Handling worker failures</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Part-5-Inverted-index-generation"><span class="toc-number">5.</span> <span class="toc-text">Part 5: Inverted index generation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#conclusion"><span class="toc-number">6.</span> <span class="toc-text">conclusion</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="Hide"  title="Show or Hide Table of Contents">
+
+    <script>
+        yiliaConfig.toc = ["Hide", "Show", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"This is the implementation of 6.824 Lab1 MapReduce　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018-02-23-Introduction_Sketch_Program.html" title="Pre: Fast, Approximate Analysis of Big Data">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="Mini Archives"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018-02-23-hello-world.html" title="Next: Hello World">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Real Time Scheduling intro.html">Real time scheduling introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-24-the_world_beyond_batch_streaming_101.html">The world beyond batch Streaming 101</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-24-decorater_type_check.html">Implementing Type Checker in Python3</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-24-dock_intro.html">Docker introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-24-grpc.html">gRPC example in Docker</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-Bloom Filter and Count-Min Sketch.html">Bloom Filter 和　Count-Min Sketch 介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-DataSketches Research Directions.html">DataSketches Research Directions</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-Introduction_Sketch_Program.html">Fast, Approximate Analysis of Big Data</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-mapreduce implements.html">This is the implementation of 6.824 Lab1 MapReduce</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-hello-world.html">Hello World</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-time-Timer.html">Go 的定时器的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-Q-Digest.html">Q-Digest 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-23-GK.html">GK 算法简介</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2018 斯沃德 (Titanssword)
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="A fast, simple &amp; powerful blog framework">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="Another simple and elegant theme for Hexo  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="Site Visitors"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="Page Hits"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="Back to Top"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="Comments"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="Go to Bottom"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

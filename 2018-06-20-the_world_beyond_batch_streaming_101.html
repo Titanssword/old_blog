@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh,english">
+<head><meta name="generator" content="Hexo 3.9.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="斯沃德 (Titanssword)">
+
+
+
+<meta name="description" content="This is the first post in a two-part series about the evolution of data processing, with a focus on streaming systems, unbounded data sets, and the future of big data.">
+<meta name="keywords" content="google,data processing">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The world beyond batch Streaming 101">
+<meta property="og:url" content="https://github.com/Titanssword/2018-06-20-the_world_beyond_batch_streaming_101.html">
+<meta property="og:site_name" content="斯沃德的小博客">
+<meta property="og:description" content="This is the first post in a two-part series about the evolution of data processing, with a focus on streaming systems, unbounded data sets, and the future of big data.">
+<meta property="og:locale" content="zh,english">
+<meta property="og:image" content="https://d3ansictanv2wj.cloudfront.net/post01_fig01_timedomains-ea86183a3a9d99179a6e6f5c521ffdbf.jpg">
+<meta property="og:image" content="https://d3ansictanv2wj.cloudfront.net/post01_fig02_classicbatch-65147a08a7902873d46be1e5805c4bd4.jpg">
+<meta property="og:image" content="https://d3ansictanv2wj.cloudfront.net/post01_fig03_batchfixedwindows-15968ed45b739377364dfbba39f3ff17.jpg">
+<meta property="og:image" content="https://d3ansictanv2wj.cloudfront.net/post01_fig04_batchsessions-d32b02f38b923052339bc6ddeb3d7c69.jpg">
+<meta property="og:image" content="https://d3ansictanv2wj.cloudfront.net/post01_fig08_windowing-01184b86c06843c382f6fc36316d81c0.jpg">
+<meta property="og:image" content="https://d3ansictanv2wj.cloudfront.net/post01_fig10_eventtimefixedwindows-1e30b3712f6189766a6ca7df44b4a2f9.jpg">
+<meta property="og:updated_time" content="2018-06-20T03:13:18.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="The world beyond batch Streaming 101">
+<meta name="twitter:description" content="This is the first post in a two-part series about the evolution of data processing, with a focus on streaming systems, unbounded data sets, and the future of big data.">
+<meta name="twitter:image" content="https://d3ansictanv2wj.cloudfront.net/post01_fig01_timedomains-ea86183a3a9d99179a6e6f5c521ffdbf.jpg">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="斯沃德的小博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>The world beyond batch Streaming 101 | 斯沃德的小博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: 
+    }
+</script>
+
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">斯沃德 (Titanssword)</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">keep learning, keep living, keep coding</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DataSketches/">DataSketches</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GK/">GK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go/">Go</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT/">MIT</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Priority/">Priority</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Q-digest/">Q-digest</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Real-time/">Real time</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Static-Type/">Static Type</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Stream/">Stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Summary/">Summary</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Type-Hint/">Type Hint</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Yahoo/">Yahoo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/concurrent-system/">concurrent system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/container/">container</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/contrainer/">contrainer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-processing/">data processing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-stream/">data stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/distributed-algorithms/">distributed algorithms</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/example/">example</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gRPC/">gRPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/google/">google</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quantile-problem/">quantile problem</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rate-limit/">rate limit</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/resource-allocation/">resource allocation</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/scheduling/">scheduling</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/stream-algorithm-implement/">stream algorithm implement</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sword/">sword</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/年度小结/">年度小结</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">专注于前端</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">keep learning, keep living, keep coding</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-the_world_beyond_batch_streaming_101" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018-06-20-the_world_beyond_batch_streaming_101.html" class="article-date">
+      <time datetime="2018-06-20T03:13:18.000Z" itemprop="datePublished">2018-06-20</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      The world beyond batch Streaming 101
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/paper/">paper</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/data-processing/">data processing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/google/">google</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>流数据处理对于现今的大数据来说是一件大事，并且有充分的理由。其中：</p>
+<ul>
+<li>企业渴望获得更及时的数据，切换到流处理是实现更低延迟的好方法。</li>
+<li>现代业务中越来越常见的大量无限数据集使用专为这种永无止境的数据量而设计的系统更容易被驯服。</li>
+<li>在数据到达时处理数据，随着时间的推移将工作负载分布得更均匀，从而产生更一致且可预测的资源消耗。</li>
+</ul>
+<h2 id="Background"><a href="#Background" class="headerlink" title="Background"></a>Background</h2><p>首先，我将介绍一些重要的背景信息，这些信息将有助于构思我想讨论的其他主题。我们将在三个特定的部分完成此操作：</p>
+<ul>
+<li>Terminology: 精确地谈论复杂的话题需要对术语进行精确的定义。对于一些在当前使用中已经超负荷解释的术语，我会尽力确定我说的时候的意思。</li>
+<li>Capabilities: 我会谈谈流媒体系统的常识缺点。我还会提出我认为数据处理系统制造商需要采用的思维框架，以满足现代数据用户的需求。</li>
+<li>Time domains: 我将介绍与数据处理相关的两个主要时间领域，展示它们之间的关系，并指出这两个领域带来的一些困难。<h3 id="Terminology-What-is-streaming"><a href="#Terminology-What-is-streaming" class="headerlink" title="Terminology: What is streaming?"></a>Terminology: What is streaming?</h3>问题的症结在于许多应该由它们所描述的东西（例如，无限数据处理，近似结果等）已经通过它们历史上已经完成的方式来口头描述（即，通过流式传输执行引擎）。术语精确度的缺乏决定了流传输的真正含义，并且在某些情况下，流传输系统本身的负担会加重，这意味着它们的能力限于经常被描述为 “流” 的特性，如近似或推测性结果。鉴于精心设计的流媒体系统与任何现有的批量引擎一样能够（技术上更加如此）产生正确，一致，可重复的结果，因此我更愿意将术语 “流” 分离为一个非常具体的含义：一种数据处理引擎设计时考虑了无限的数据集。而已。 （为了完整性，或许值得一提的是，这个定义包括真正的流媒体和微批量实现。）<br>这里有几个我经常听到的，每个都有更精确的描述性术语:</li>
+<li>Unbounded data: 一种不断增长的，实质上无限的数据集。这些通常被称为 “流数据”。然而，流应用或批处理术语在应用于数据集时存在问题，因为如上所述，它们意味着使用某种类型的执行引擎来处理这些数据集。所讨论的两类数据集之间的关键区别实际上是它们的有限性，因此最好用描述它们的术语来描述它们。因此，我将把无限的 “流式” 数据集称为无界数据，将有限的 “批处理” 数据集称为有界数据。</li>
+<li>Unbounded data processing: 一种持续的数据处理模式，适用于上述类型的无界数据。尽管我个人喜欢使用术语流来描述这种类型的数据处理，但在这种情况下它的使用又意味着使用流式执行引擎，这充其量是误导性的; 由于批量系统首先被构想出来（相反，设计良好的流式系统不仅能够处理超过有界数据的 “批量” 工作负载），所以批处理引擎的重复运行已用于处理无界数据。因此，为了清楚起见，我将简单地称之为无限数据处理。</li>
+<li>Low-latency, approximate, and/or speculative results: 这些类型的结果通常与流引擎相关联。事实上，批处理系统传统上没有考虑到低延迟或推测性结果，这是一个历史人为因素，仅此而已。当然，批量发动机如果有指导，完全可以产生近似的结果。因此，与上述条款一样，将这些结果描述为它们（低延迟，近似和 / 或推测）比通过历史流式（通过流式引擎）如何表现要好得多。</li>
+</ul>
+<p>从这里开始，任何时候我使用术语 “streaming”，你都可以安全地假设我的意思是一个为无界数据集设计的执行引擎，仅此而已。当我指上述任何其他术语时，我将明确地说出无限数据，无限数据处理或低延迟 / 近似 / 推测结果。这些是我们在 Cloud Dataflow 中采用的术语，我鼓励其他人采取类似的立场。</p>
+<p>On the greatly exaggerated limitations of streaming:<br>接下来，让我们谈一谈流式系统可以做什么和不可以做什么，重点放在能做的上; 我想在这些帖子中看到的最重要的事情之一就是设计良好的流式传输系统的性能如何。流式传输系统长期以来一直处于一个提供低延迟，不准确 / 推测结果的利基市场，通常与更强大的批处理系统相结合以提供最终的正确结果，即 Lambda 架构。</p>
+<p>对于那些还不熟悉 Lambda Architecture 的人来说，其基本思想是，您可以在批处理系统旁边运行流式处理系统，两者执行基本相同的计算。流式传输系统为您提供低延迟，不准确的结果（或者因为使用近似算法，或者因为流式传输系统本身不能提供正确性），并且一段时间后，批处理系统会一路滚动并为您提供正确的输出。最初由 Twitter 的 Nathan Marz（Storm 的创始人）提出，它最终取得了相当的成功，因为它实际上是一个很棒的想法。流媒体引擎在正确性部门中有点令人失望，批量引擎如你所期望的那样固有地笨重，所以 Lambda 给了你一种方法来让你的谚语蛋糕也吃掉。不幸的是，维护 Lambda 系统非常麻烦：您需要构建，配置和维护两个独立版本的管道，然后以某种方式合并最后两条管道的结果。</p>
+<p>所有这一切的必然结果是，流式系统的广泛成熟以及用于无限数据处理的强大框架将及时将 Lambda 架构降级到它所属的大数据历史的古老。我相信现在已经到了将这变成现实的时候了。你真的只需要两件事：</p>
+<ul>
+<li>Correctness — This gets you parity with batch<br>核心的正确性归结为一致的存储。流式传输系统需要一种用于检查持久状态的方法（Kreps 在他的 “为什么本地状态是流处理过程中的基本原型” 一文中讨论过的内容），并且它必须设计良好，足以在机器故障的情况下保持一致。当 Spark Streaming 几年前首次出现在公共大数据场景中时，它是一个在其他黑暗流媒体世界中一致的灯塔。值得庆幸的是，自那时以来，情况有所改善，但如果没有强大的一致性，仍然有很多流媒体系统仍然能够获得成功，我真的不敢相信，至多一次加工仍然是一件事，但事实确实如此。 重申一下，因为这一点很重要：精确一次处理需要强大的一致性，这对于正确性是必需的，这是任何有可能满足或超过批处理系统能力的系统的要求。除非你真的不关心你的结果，否则我恳求你避开任何不提供强烈一致状态的流式系统。批量系统不要求您提前验证它们是否能够产生正确答案; 不要浪费你的时间在不能满足相同条件的流式系统上。 如果您想了解更多关于如何在流系统中获得强大的一致性，我建议您查看 MillWheel 和 Spark Streaming 论文。两篇论文都花费大量时间讨论一致性。鉴于文献和其他文献中关于此主题的高质量信息，我不会在这些帖子中进一步报道。</li>
+<li>Tools for reasoning about time — This gets you beyond batch.<br>用于推理时间的好工具对于处理不同事件时间偏差的无限无序数据至关重要。越来越多的现代数据集表现出这些特点，现有的批处理系统（以及大多数流式处理系统）缺乏必要的工具来处理它们施加的困难。我将花这篇文章的其余部分，以及下一篇文章的大部分内容，解释并关注这一点。首先，我们将对时域的重要概念有一个基本的了解，之后我们将深入研究我的意思是无限的，无序的不同事件时偏斜的数据。然后，我们将使用本文的其余部分，讨论使用批处理和流式处理系统进行有界和无界数据处理的常用方法。</li>
+</ul>
+<h3 id="Event-time-vs-processing-time"><a href="#Event-time-vs-processing-time" class="headerlink" title="Event time vs. processing time"></a>Event time vs. processing time</h3><p>要有意识地谈论无限的数据处理，需要清楚地了解所涉及的时间领域。在任何数据处理系统中，通常有两个我们关心的时间域：</p>
+<ul>
+<li>Event time, which is the time at which events actually occurred.</li>
+<li>Processing time, which is the time at which events are observed in the system.<br>并非所有的使用案例都关心事件时间（如果你的事情没有，那么，你的生活会更容易），但是很多人都会这样做。例子包括随时间推移表征用户行为，大多数计费应用程序和许多类型的异常检测，等等。</li>
+</ul>
+<p>在理想的世界中，事件时间和处理时间总是相等的，事件在发生时立即进行处理。但事实并非如此，事件时间和处理时间之间的偏差不仅非零，而且往往是底层输入源，执行引擎和硬件特性的高度可变函数。可能影响倾斜 skew 的事情包括：</p>
+<ul>
+<li>共享资源限制，例如网络拥塞，网络分区或非专用环境中的共享 CPU。</li>
+<li>软件原因，如分布式系统逻辑，争用等。</li>
+<li>数据本身的特点，包括密钥分配，吞吐量变化或者无序变化（例如，在整个飞行中脱机使用它们后，人们将其电话退出飞行模式的飞机）。<br>因此，如果您在任何现实世界的系统中绘制事件时间和处理时间的进度，通常会得到类似于图 1 中红线的内容。<br><img src="https://d3ansictanv2wj.cloudfront.net/post01_fig01_timedomains-ea86183a3a9d99179a6e6f5c521ffdbf.jpg" alt><br>斜率为 1 的黑色虚线表示理想状态，处理时间和事件时间完全相等; 红线代表现实。在这个例子中，系统在处理时间开始时滞后了一段时间，在中间更接近理想状态，然后又稍微延迟了一段时间。理想和红线之间的水平距离是处理时间和事件时间之间的偏差。这种偏斜本质上是处理流水线引入的延迟。<br>由于事件时间与处理时间之间的映射不是静态的，这意味着如果您关心其事件时间（即实际发生事件的时间），则无法单独在您的管道中观察它们的时间内分析数据。不幸的是，这是大多数现有系统为无界数据设计的方式。为了应对无限数据集的无限性质，这些系统通常会提供一些窗口化输入数据的概念。我们将在下面深入讨论窗口，但它本质上意味着在时间边界上将数据集切成有限的块。<br>如果您关心正确性并且有兴趣在事件时间的背景下分析数据，那么您不能像大多数现有系统那样使用处理时间（即处理时间窗口）来定义这些时间边界; 在处理时间和事件时间之间没有一致的相关性时，一些事件时间数据将在错误的处理时间窗口中结束（由于分布式系统的内在滞后，许多类型输入源的在线 / 离线性质，等等），把正确性扔出窗外，就像它一样。我们将在下面的许多例子和下一篇文章中更详细地讨论这个问题。</li>
+</ul>
+<p>在无界数据的背景下，无序和变量倾斜会导致事件时间窗口的完备性问题：在处理时间和事件时间之间缺乏可预测的映射，您如何确定何时观察了给定事件时间 X 的所有数据？对于许多真实世界的数据源，你根本无法做到。目前使用的绝大多数数据处理系统都依赖于一些完整性概念，这使得它们在应用于无界数据集时处于严重劣势。<br>我提出，我们不应该试图将无限的数据转化为最终完成的有限批次的信息，而应该设计工具，使我们能够生活在由这些复杂数据集所强加的不确定性世界中。新数据将到达，旧数据可能会被撤消或更新，我们构建的任何系统都应该能够独立处理这些事实，完整性的概念是一种方便的优化，而不是语义上的必要。</p>
+<h2 id="Data-processing-patterns"><a href="#Data-processing-patterns" class="headerlink" title="Data processing patterns"></a>Data processing patterns</h2><p>在这个时候，我们已经建立了足够的背景，我们可以开始研究当今有界和无界数据处理常见的核心类型的使用模式。我们将考虑这两种类型的处理，以及在相关的况下，在我们关心的两种主要类型的引擎（批处理和流式处理，在这种情况下，我基本上将流式处理的微量批处理两者之间的差异在这个层面上并不重要）。</p>
+<h3 id="Bounded-data"><a href="#Bounded-data" class="headerlink" title="Bounded data"></a>Bounded data</h3><p>处理有界数据非常简单，每个人都很熟悉。在下面的图表中，我们从左边开始，填充了熵的数据集。我们通过一些数据处理引擎（通常是批处理，尽管设计良好的流引擎也能正常工作）来运行它，比如 MapReduce，并且在最后一个新的结构化数据集中具有更高的固有价值：<br><img src="https://d3ansictanv2wj.cloudfront.net/post01_fig02_classicbatch-65147a08a7902873d46be1e5805c4bd4.jpg" alt><br>尽管当然，作为该方案的一部分，您实际可以计算的内容有无限的变化，但整体模型非常简单。更有趣的是处理无界数据集的任务。现在让我们看看通常处理无界数据的各种方式，从传统批处理引擎使用的方法开始，然后结束使用针对无限数据设计的系统的方法，例如大多数流或微批处理引擎</p>
+<h3 id="Unbounded-data-—-batch"><a href="#Unbounded-data-—-batch" class="headerlink" title="Unbounded data — batch"></a>Unbounded data — batch</h3><p>批处理引擎虽然没有明确设计无限数据，但已经被用于处理无界数据集，因为批处理系统是第一个被构想出来的。正如人们所预料的那样，这种方法围绕着将无界数据分割成适合批处理的有限数据集的集合。</p>
+<h3 id="Fixed-windows"><a href="#Fixed-windows" class="headerlink" title="Fixed windows"></a>Fixed windows</h3><p>使用批处理引擎的重复运行来处理无界数据集的最常见方法是将输入数据窗口化为固定大小的窗口，然后将每个窗口作为单独的有界数据源处理。特别是对于像日志这样的输入源，可以将事件写入目录和文件层次结构，这些目录和文件层次结构的名称会对它们所对应的窗口进行编码，因为您基本上已经执行基于时间的随机播放来获取数据，所以这种事情看起来很直观提前进入适当的事件时间窗口。<br>但实际上，大多数系统仍然有完整性问题需要处理：如果某些事件由于网络分区而延迟到日志的路由，那该怎么办？如果您的活动在全球范围内收集并且必须在处理之前转移到公共场所？如果你的事件来自移动设备会怎么样？这意味着某种缓解措施可能是必要的（例如，延迟处理直到您确定已收集所有事件，或者在数据迟到时重新处理给定窗口的整个批次）。<br><img src="https://d3ansictanv2wj.cloudfront.net/post01_fig03_batchfixedwindows-15968ed45b739377364dfbba39f3ff17.jpg" alt></p>
+<h3 id="Sessions"><a href="#Sessions" class="headerlink" title="Sessions"></a>Sessions</h3><p>当您尝试使用批处理引擎将无界数据处理为更复杂的窗口策略（如会话）时，此方法会更加糟糕。会话通常定义为活动时段（例如，针对特定用户）由不活动的间隙终止。使用典型的批处理引擎计算会话时，通常最终的会话会跨越批次分割，如下图中的红色标记所示。可以通过增加批量大小来减少分割数量，但是以延迟增加为代价。另一种选择是添加额外的逻辑来拼接先前运行的会话，但代价是进一步的复杂性。<br><img src="https://d3ansictanv2wj.cloudfront.net/post01_fig04_batchsessions-d32b02f38b923052339bc6ddeb3d7c69.jpg" alt><br>无论哪种方式，使用经典批处理引擎计算会话都不太理想。更好的方法是以流式方式建立会话，我们将在稍后讨论。</p>
+<h3 id="Unbounded-data-—-streaming"><a href="#Unbounded-data-—-streaming" class="headerlink" title="Unbounded data — streaming"></a>Unbounded data — streaming</h3><p>与大多数基于批处理的无界数据处理方法的临时特性相反，流式传输系统是为无限数据而构建的。正如我前面提到的，对于许多现实世界中的分布式输入源，您不仅发现自己处理无限数据，而且还处理以下数据：</p>
+<ul>
+<li>Highly unordered with respect to event times, 这意味着如果你想分析它们发生的环境中的数据，你需要在管道中进行某种基于时间的洗牌</li>
+<li>Of varying event time skew 这意味着你不能仅仅假设你总能看到某个给定事件时间 X 的大部分数据在某个恒定的时间 Y 内。<br>在处理具有这些特征的数据时，可以采取一些方法。我通常将这些方法分为四类：</li>
+<li>Time-agnostic</li>
+<li>Approximation</li>
+<li>Windowing by processing time</li>
+<li>Windowing by event time</li>
+</ul>
+<h3 id="Time-agnostic"><a href="#Time-agnostic" class="headerlink" title="Time-agnostic"></a>Time-agnostic</h3><p>与时间无关的处理用于时间本质上不相关的情况 - 即所有相关的逻辑都是数据驱动的。由于关于这种用例的一切都是由更多数据的到来决定的，除了基本的数据交付之外，真正没有什么特别的流引擎需要支持。因此，基本上所有现有的流式传输系统都支持开箱即用的时间不用的用例（在保证一致性的情况下模系统间差异，当然，对于那些关心正确性的用户）。批处理系统也非常适用于无界数据源的时间无关处理，只需将无界源简单地斩断为任意序列的有界数据集并独立处理这些数据集。我们将在本节中介绍几个具体示例，但考虑到处理与时间无关的处理的直接性，除此之外不会花费太多时间。</p>
+<h4 id="Filtering"><a href="#Filtering" class="headerlink" title="Filtering"></a>Filtering</h4><p>一个非常基本的时间不可知的处理形式是过滤。假设您正在处理 Web 流量日志，并且想要过滤掉所有不是源自特定域的流量。您会在每条记录到达时查看它们，看看它是否属于感兴趣的域名，如果不是，则放弃它。由于这种事情在任何时候都只依赖于一个单一的元素，因此数据源是无限的，无序的，以及变化的事件时间偏移是无关紧要的。</p>
+<h4 id="Inner-joins"><a href="#Inner-joins" class="headerlink" title="Inner-joins"></a>Inner-joins</h4><p>另一个与时间无关的例子是内连接（或散列连接）。当加入两个无限数据源时，如果您只关心来自两个源的元素到达时的连接结果，则该逻辑没有时间元素。在看到来自一个源的值时，您可以简单地将其缓存在持久状态; 一旦来自另一个源的第二个值到达，您只需要发出连接的记录。 （实际上，你可能想要一些垃圾收集策略来处理未完成的部分连接，这可能是基于时间的，但对于很少或没有未完成连接的用例，这种事情可能不成问题。）<br>将语义切换到某种外连接引入了我们所讨论的数据完整性问题：一旦你看到了连接的一端，你怎么知道对方是否会到达？真相被告知，你不知道，所以你必须介绍一些超时的概念，它引入了时间元素。这个时间元素基本上是一种窗口化的形式，我们稍后会仔细研究</p>
+<h3 id="Approximation-algorithms"><a href="#Approximation-algorithms" class="headerlink" title="Approximation algorithms"></a>Approximation algorithms</h3><p>第二种主要方法是近似算法，如近似 Top-N，流式 K 均值等。它们采用无限的输入来源并提供输出数据，如果你眯眼它们，看起来或多或少像你希望得到。近似算法的优点是，通过设计，它们的开销较低，并且设计用于无限数据。缺点是它们存在一个有限的集合，算法本身通常很复杂（这使得难以想象新的），并且它们的近似性质限制了它们的效用。 值得注意的是：这些算法通常在其设计中有一些时间元素（例如，某种内置衰减）。而且，由于它们在到达时处理元素，因此该时间元素通常是基于处理时间的。这对于在其近似值上提供某种可证明的误差界的算法特别重要。如果这些错误界限是按照顺序到达的数据来预测的，那么当您以不同的事件时间偏差提供算法无序数据时，它们本质上意味着什么。要记住的事情。 近似算法本身是一个引人入胜的主题，但由于它们本质上是时间无关处理的另一个例子（模拟算法本身的时间特征），它们使用起来相当简单，因此我们目前的重点不值得进一步关注。</p>
+<h3 id="Windowing"><a href="#Windowing" class="headerlink" title="Windowing"></a>Windowing</h3><p>其余两种无界数据处理方法都是窗口变化。在深入探讨它们之间的差异之前，我应该清楚地明确我的意思，因为我只是简单地谈到了它。开窗就是取数据源（无界或有界）的概念，并将其沿时间边界切成有限块进行处理。下图显示了三种不同的窗口模式：<br><img src="https://d3ansictanv2wj.cloudfront.net/post01_fig08_windowing-01184b86c06843c382f6fc36316d81c0.jpg" alt></p>
+<ul>
+<li>Fixed windows:<br>固定窗口将时间分段为具有固定大小的时间长度的段。通常情况下（如图 8 所示），固定窗口的分段被统一应用于整个数据集，这是对齐窗口的一个例子。在某些情况下，希望对不同数据子集（例如，每个密钥）的窗口进行相移，以便随着时间的推移更均匀地分配窗口完成负载，而这是未对齐窗口的一个示例，因为它们在数据之间变化。</li>
+<li>Sliding windows:<br>固定窗口的推广，滑动窗口由固定长度和固定周期来定义。如果周期小于长度，则窗口重叠。如果周期等于长度，则固定窗口。如果周期大于长度，则会出现一种奇怪的抽样窗口，它只会查看随时间推移的数据子集。与固定窗口一样，滑动窗口通常是对齐的，但在某些使用情况下可能未对齐为性能优化。请注意，图 8 中的滑动窗口是为了给出滑动运动的感觉而绘制的; 实际上，所有五个窗口将适用于整个数据集。</li>
+<li>Sessions:<br>动态窗口的一个例子是，会话由大于某个超时的不活动间隙终止的事件序列组成。会话通常用于通过将一系列与时间相关的事件（例如，在一次观看中观看的一系列视频）分组在一起来随时间分析用户行为。会议很有趣，因为它们的长度不能事先定义; 它们取决于涉及的实际数据。它们也是未对齐窗口的典型例子，因为会话在不同的数据子集（例如不同的用户）中实际上从未完全相同。</li>
+</ul>
+<p>讨论的两个时间领域 - 处理时间和事件时间 - 实质上是我们关心的两个领域 [2]。窗口化在两个领域都是有意义的，所以我们将详细看看每个领域，看看它们有何不同。由于处理时间窗口在现有系统中非常普遍，我将从那里开始。</p>
+<h4 id="Windowing-by-processing-time"><a href="#Windowing-by-processing-time" class="headerlink" title="Windowing by processing time"></a>Windowing by processing time</h4><p>当按处理时间开窗时，系统基本上将输入数据缓存到窗口中，直到经过一定量的处理时间。例如，在五分钟的固定窗口的情况下，系统将缓冲数据五分钟的处理时间，之后它将把它在这五分钟内观察到的所有数据视为一个窗口并将它们发送到下游进行处理。<br>There are a few nice properties of processing time windowing:<br>这很简单。这个实现非常简单，因为你不用担心随时间洗牌数据。当他们到达时，您只需将它们缓冲起来，并在窗口关闭时将它们发送到下游。 判断窗口的完整性很简单。由于系统完全了解窗口的所有输入是否已被看到，所以它可以对给定窗口是否完成做出完美的决定。这意味着，当通过处理时间开窗时，不需要以任何方式处理 “迟到” 数据。 如果您想要根据观察到的来源推断信息源，则处理时间窗口正是您想要的。许多监测场景属于这一类。想象一下，跟踪每秒发送到全球级 Web 服务的请求数量。为了检测中断而计算这些请求的速率是处理时间窗口的完美使用。</p>
+<p>除了优点之外，处理时间窗有一个非常大的缺点：如果所讨论的数据具有与它们相关的事件时间，那么如果处理时间窗口要反映这些事件实际发生的实际时间，那么这些数据必须以事件时间顺序到达发生了。不幸的是，事件时间有序的数据在许多真实世界的分布式输入源中并不常见。<br>作为一个简单的例子，想象任何收集使用统计信息以供日后处理的移动应用程序。如果某个移动设备在任何时间段内都处于离线状态（短时间内连接中断，飞行模式在全国各地飞行等），那么在该时段内记录的数据将不会上传，直到设备再次联机。这意味着数据可能会以几分钟，几小时，几天，几周或更长时间的事件时间偏差到达。当通过处理时间加窗时，从这样的数据集中绘制任何有用的推论实质上是不可能的。<br>作为另一个例子，当整个系统健康时，许多分布式输入源可能似乎提供事件时间有序（或非常接近）的数据。不幸的是，当健康并不意味着它始终保持这种状态时，输入源的事件时间偏差很低。考虑处理在多个大陆收集的数据的全球服务。如果跨带宽受限的横贯大陆线路的网络问题（令人惊讶的是，这种情况非常普遍）进一步降低了带宽和 / 或延迟时间，突然间一部分输入数据可能会以比以前更大的偏差开始到达。如果您通过处理时间对数据进行窗口化，则窗口不再代表实际发生在其中的数据; 相反，它们代表事件到达处理管道时的时间窗口，这是一些任意组合的旧数据和当前数据。<br>在这两种情况下，我们真正想要的是按照事件到达顺序的方式对事件时间进行数据显示。我们真正想要的是事件时间窗口。</p>
+<h4 id="Windowing-by-event-time"><a href="#Windowing-by-event-time" class="headerlink" title="Windowing by event time"></a>Windowing by event time</h4><p>事件时间窗口是当您需要以有限块的形式观察数据源时使用的事件时间窗口，这些数据源反映了这些事件实际发生的时间。这是开窗的黄金标准。令人遗憾的是，目前使用的大多数数据处理系统缺乏对其的本地支持（尽管具有像样的一致性模型的任何系统（如 Hadoop 或 Spark Streaming）可以作为构建这种窗口系统的合理基板）。</p>
+<p>This diagram shows an example of windowing an unbounded source into one-hour fixed windows:</p>
+<p><img src="https://d3ansictanv2wj.cloudfront.net/post01_fig10_eventtimefixedwindows-1e30b3712f6189766a6ca7df44b4a2f9.jpg" alt></p>
+<p>图中的白色实线表示两个感兴趣的特定数据。这两个数据都到达处理时间窗口，与他们所属的事件时间窗口不匹配。因此，如果这些数据已经被窗口化为关注事件时间的用例的处理时间窗口，则计算结果将不正确。正如人们所期望的那样，事件时间正确性是使用事件时间窗口的一个好处。<br>有关无限数据源上的事件时间窗口的另一个好处是，您可以创建动态大小的窗口（如会话），而不会在通过固定窗口生成会话时观察到任意分割（正如我们先前在会话示例中从 “未绑定数据 - 批次 “部分）：<br>当然，强大的语义很少是免费的，事件时间窗口也不例外。事件时间窗口有两个明显的缺点，这是由于窗口必须经常比窗口本身的实际长度长（在处理时间内）。</p>
+<ul>
+<li>Buffering 由于延长了窗口的使用寿命，所以需要更多的数据缓冲。值得庆幸的是，持久性存储通常是大多数数据处理系统所依赖的资源类型中最便宜的（其他主要是 CPU，网络带宽和 RAM）。因此，这个问题通常比使用具有强一致持久状态和体面的内存缓存层的任何设计良好的数据处理系统时可能会想到的要少得多。而且，许多有用的聚合不需要缓冲整个输入集合（例如，总和或平均值），而是可以递增地执行，并且以持久状态存储的小得多的中间聚合。</li>
+<li>Completeness 鉴于我们常常无法知道何时我们已经看到给定窗口的所有数据，我们如何知道窗口的结果何时可以实现？事实上，我们根本就没有。对于许多类型的输入，系统可以通过类似 MillWheel 的水印（我将在第 2 部分中详细讨论）给出合理准确的启发式窗口完成估计。但是，在绝对正确性至关重要的情况下（再次考虑计费），唯一真正的选择是为管道构建者提供一种方式，让他们表达何时需要实现窗口的结果，以及如何随着时间的推移对这些结果进行细化。处理窗口的完整性（或缺少窗口）是一个非常吸引人的话题，但在下一个具体例子的背景下可能是最好的探索。</li>
+</ul>
+<h2 id="conclusion"><a href="#conclusion" class="headerlink" title="conclusion"></a>conclusion</h2><p>To summarize, in this post I’ve:</p>
+<ul>
+<li>Clarified terminology, specifically narrowing the definition of “streaming” to apply to execution engines only, while using more descriptive terms like unbounded data and approximate/speculative results for distinct concepts often categorized under the “streaming” umbrella.</li>
+<li>Assessed the relative capabilities of well-designed batch and streaming systems, positing that streaming is in fact a strict superset of batch, and that notions like the Lambda Architecture, which are predicated on streaming being inferior to batch, are destined for retirement as streaming systems mature.</li>
+<li>Proposed two high-level concepts necessary for streaming systems to both catch up to and ultimately surpass batch, those being correctness and tools for reasoning about time, respectively.</li>
+<li>Established the important differences between event time and processing time, characterized the difficulties those differences impose when analyzing data in the context of when they occurred, and proposed a shift in approach away from notions of completeness and toward simply adapting to changes in data over time.</li>
+<li>Looked at the major data processing approaches in common use today for bounded and unbounded data, via both batch and streaming engines, roughly categorizing the unbounded approaches into: time-agnostic, approximation, windowing by processing time, and windowing by event time.</li>
+</ul>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018-06-20-the_world_beyond_batch_streaming_101.html">The world beyond batch Streaming 101</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">斯沃德 (Titanssword)</a></p>
+        <p><span>发布时间:</span>2018-06-20, 05:13:18</p>
+        <p><span>最后更新:</span>2018-06-20, 11:13:18</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018-06-20-the_world_beyond_batch_streaming_101.html" title="The world beyond batch Streaming 101">https://github.com/Titanssword/2018-06-20-the_world_beyond_batch_streaming_101.html</a>
+            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-06-20-the_world_beyond_batch_streaming_101.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018-06-21-concurrent system.html">
+                    Rate Limit
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018-06-20-Real Time Scheduling intro.html">
+                    Real time scheduling introduction
+                </a>
+            </div>
+        
+    </nav>
+
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Background"><span class="toc-number">1.</span> <span class="toc-text">Background</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Terminology-What-is-streaming"><span class="toc-number">1.1.</span> <span class="toc-text">Terminology: What is streaming?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Event-time-vs-processing-time"><span class="toc-number">1.2.</span> <span class="toc-text">Event time vs. processing time</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-processing-patterns"><span class="toc-number">2.</span> <span class="toc-text">Data processing patterns</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Bounded-data"><span class="toc-number">2.1.</span> <span class="toc-text">Bounded data</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Unbounded-data-—-batch"><span class="toc-number">2.2.</span> <span class="toc-text">Unbounded data — batch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fixed-windows"><span class="toc-number">2.3.</span> <span class="toc-text">Fixed windows</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sessions"><span class="toc-number">2.4.</span> <span class="toc-text">Sessions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Unbounded-data-—-streaming"><span class="toc-number">2.5.</span> <span class="toc-text">Unbounded data — streaming</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Time-agnostic"><span class="toc-number">2.6.</span> <span class="toc-text">Time-agnostic</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Filtering"><span class="toc-number">2.6.1.</span> <span class="toc-text">Filtering</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Inner-joins"><span class="toc-number">2.6.2.</span> <span class="toc-text">Inner-joins</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Approximation-algorithms"><span class="toc-number">2.7.</span> <span class="toc-text">Approximation algorithms</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Windowing"><span class="toc-number">2.8.</span> <span class="toc-text">Windowing</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Windowing-by-processing-time"><span class="toc-number">2.8.1.</span> <span class="toc-text">Windowing by processing time</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Windowing-by-event-time"><span class="toc-number">2.8.2.</span> <span class="toc-text">Windowing by event time</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#conclusion"><span class="toc-number">3.</span> <span class="toc-text">conclusion</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"The world beyond batch Streaming 101　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018-06-21-concurrent system.html" title="上一篇: Rate Limit">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018-06-20-Real Time Scheduling intro.html" title="下一篇: Real time scheduling introduction">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019-02-13-2018年度总结.html">2018个人年度回忆</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-09-17-Kubernetes vs Mesos vs Swarm.html">Kubernetes vs Mesos vs Swarm</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-29-Container Scheduling.html">container scheduling</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-28-borg.html">Large-scale cluster management at Google with Borg</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-optimazition_intro.html">optimazition_intro</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-Genetic Algorithm For Multi-Objective Optimization of Container Allocation.html">Genetic Algorithm for mulit-Objective Optimization of containers allocation in cloud architecture</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-13-Dynamic_Resource_Allocation_Algorithm_for_container-based_Service.html">Dynamic Resource Allocation algorithms for container-based service computing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-Consistent hashing.html">consistent hashing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-concurrent system.html">Rate Limit</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-the_world_beyond_batch_streaming_101.html">The world beyond batch Streaming 101</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Real Time Scheduling intro.html">Real time scheduling introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Bloom Filter and Count-Min Sketch.html">Bloom Filter 和　Count-Min Sketch 介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-21-decorater_type_check.html">Implementing Type Checker in Python3</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-20-grpc.html">gRPC example in Docker</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-19-dock_intro.html">Docker introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-20-Q-Digest.html">Q-Digest 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-25-GK.html">GK 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-21-time-Timer.html">Go 的定时器的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-DataSketches Research Directions.html">DataSketches Research Directions</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-mapreduce implements.html">This is the implementation of 6.824 Lab1 MapReduce</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-Introduction_Sketch_Program.html">Fast, Approximate Analysis of Big Data</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-hello-world.html">Hello World</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2024 斯沃德 (Titanssword)
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

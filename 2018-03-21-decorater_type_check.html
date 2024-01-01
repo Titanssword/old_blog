@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh,english">
+<head><meta name="generator" content="Hexo 3.9.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="斯沃德 (Titanssword)">
+
+
+
+<meta name="description" content="Type hint and type checker">
+<meta name="keywords" content="Python,Static Type,Type Hint">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Implementing Type Checker in Python3">
+<meta property="og:url" content="https://github.com/Titanssword/2018-03-21-decorater_type_check.html">
+<meta property="og:site_name" content="斯沃德的小博客">
+<meta property="og:description" content="Type hint and type checker">
+<meta property="og:locale" content="zh,english">
+<meta property="og:updated_time" content="2018-03-20T18:53:01.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Implementing Type Checker in Python3">
+<meta name="twitter:description" content="Type hint and type checker">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="斯沃德的小博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Implementing Type Checker in Python3 | 斯沃德的小博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: 
+    }
+</script>
+
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">斯沃德 (Titanssword)</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">keep learning, keep living, keep coding</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DataSketches/">DataSketches</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GK/">GK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go/">Go</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT/">MIT</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Priority/">Priority</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Q-digest/">Q-digest</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Real-time/">Real time</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Static-Type/">Static Type</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Stream/">Stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Summary/">Summary</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Type-Hint/">Type Hint</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Yahoo/">Yahoo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/concurrent-system/">concurrent system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/container/">container</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/contrainer/">contrainer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-processing/">data processing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-stream/">data stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/distributed-algorithms/">distributed algorithms</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/example/">example</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gRPC/">gRPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/google/">google</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quantile-problem/">quantile problem</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rate-limit/">rate limit</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/resource-allocation/">resource allocation</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/scheduling/">scheduling</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/stream-algorithm-implement/">stream algorithm implement</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sword/">sword</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/年度小结/">年度小结</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">专注于前端</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">keep learning, keep living, keep coding</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-decorater_type_check" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018-03-21-decorater_type_check.html" class="article-date">
+      <time datetime="2018-03-20T18:53:01.000Z" itemprop="datePublished">2018-03-20</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Implementing Type Checker in Python3
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/implement/">implement</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Python/">Python</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Static-Type/">Static Type</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Type-Hint/">Type Hint</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="introduction"><a href="#introduction" class="headerlink" title="introduction"></a>introduction</h2><p>As we all know, python is a dynamic language and dynamic typing can be flexible, powerful, convenient and easy. But with your project growing, dynamic typing is not always the best approach. As an opposite, static typing can make programs easier to understand and maintain.</p>
+<ul>
+<li>Type declarations can serve as machine-checked documentation. This is important as code is typically read much more often than modified, and this is especially important for large and complex programs.</li>
+<li>Static typing can help you find bugs earlier and with less testing and debugging. Especially in large and complex projects this can be a major time-saver.</li>
+<li>Static typing can help you find difficult-to-find bugs before your code goes into production. This can improve reliability and reduce the number of security issues.</li>
+<li>Static typing makes it practical to build very useful development tools that can improve programming productivity or software quality, including IDEs with precise and reliable code completion, static analysis tools, etc.</li>
+<li>You can get the benefits of both dynamic and static typing in a single language. Dynamic typing can be perfect for a small project or for writing the UI of your program, for example. As your program grows, you can adapt tricky application logic to static typing to help maintenance.</li>
+</ul>
+<p><a href="https://www.python.org/dev/peps/pep-3107/" target="_blank" rel="noopener">PEP 3107</a> introduces a syntax for adding arbitrary metadata annotations to Python functions. Annotations for parameters take the form of optional expressions that follow the parameter name:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def foo(a: expression, b: expression = 5):</span><br></pre></td></tr></table></figure></p>
+<p> <a href="https://www.python.org/dev/peps/pep-0484/#abstract" target="_blank" rel="noopener">PEP484</a> introduces a provisional module to provide these standard definitions and tools, along with some conventions for situations where annotations are not available.<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">def greeting(name: str) -&gt; str:</span><br><span class="line">   return &apos;Hello &apos; + name</span><br></pre></td></tr></table></figure></p>
+<p> While these annotations are available at runtime through the usual <strong>annotations</strong> attribute, no automatic type checking happens at runtime. Instead, it is assumed that a separate off-line type checker (e.g. mypy) will be used for on-demand source code analysis.</p>
+<p>Until Now, there is no specific methods to do the type check only some tools such as <code>mypy</code>, <code>PyCharm</code>. So here, we use create a simple type checker.</p>
+<h2 id="implement"><a href="#implement" class="headerlink" title="implement"></a>implement</h2><p>Firstly, we have a simple function. This is the normal one.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">def gcd(a, b):</span><br><span class="line">    &apos;&apos;&apos;Return the greatest common divisor of a and b.&apos;&apos;&apos;</span><br><span class="line">    a = abs(a)</span><br><span class="line">    b = abs(b)</span><br><span class="line">    if a &lt; b:</span><br><span class="line">        a, b = b, a</span><br><span class="line">    while b != 0:</span><br><span class="line">        a, b = b, a % b</span><br><span class="line">    return a</span><br></pre></td></tr></table></figure></p>
+<p>In this example, we consider a and b are both <code>int</code> type. Then, we add the annotations to the function <code>gcd</code>.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def gcd(a: int, b: int) -&gt; int:</span><br></pre></td></tr></table></figure></p>
+<p>we can use <code>gcd.__annotations__</code> to get the information.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gcd.__annotations__</span><br><span class="line">&#123;&apos;return&apos;: &lt;class &apos;int&apos;&gt;, &apos;b&apos;: &lt;class &apos;int&apos;&gt;, &apos;a&apos;: &lt;class &apos;int&apos;&gt;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>then we create a decorater – <code>_type_check.py</code>  , the basic idea is that using <code>isinstance</code> method to test all the types in the annotations with the real types. If it doesn’t match, alert some error message.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">import functools</span><br><span class="line">def typecheck(f):</span><br><span class="line">    @functools.wraps(f)</span><br><span class="line">    def wrapper(*args, **kwargs):</span><br><span class="line">        print(&quot;hello the _type_check&quot;)</span><br><span class="line">        for i, arg in enumerate(args[:f.__code__.co_nlocals]):</span><br><span class="line">            name = f.__code__.co_varnames[i]</span><br><span class="line">            expected_type = f.__annotations__.get(name, None)</span><br><span class="line">            if expected_type and not isinstance(arg, expected_type):</span><br><span class="line">                raise RuntimeError(&quot;error: Argument &#123;&#125; to &apos;&#123;&#125;&apos; has incompatible type &apos;&#123;&#125;&apos; ; expected &apos;&#123;&#125;&apos;&quot;.format( i+1 , f.__name__, type(arg).__name__, expected_type.__name__))</span><br><span class="line">                # raise RuntimeError(&quot;&#123;&#125; should be of type &#123;&#125;; &#123;&#125; specified&quot;.format(name, expected_type.__name__, type(arg).__name__))</span><br><span class="line">        for name, arg in kwargs.items():</span><br><span class="line">            expected_type = f.__annotations__.get(name, None)</span><br><span class="line">            if expected_type and not isinstance(arg, expected_type):</span><br><span class="line">                raise RuntimeError(&quot;error: Argument &#123;&#125; to &apos;&#123;&#125;&apos; has incompatible type &apos;&#123;&#125;&apos; ; expected &apos;&#123;&#125;&apos;&quot;.format( i+1 , f.__name__, type(arg).__name__, expected_type.__name__))</span><br><span class="line">        result = f(*args, **kwargs)</span><br><span class="line">        return_type = f.__annotations__.get(&apos;return&apos;, None)</span><br><span class="line">        if return_type and not isinstance(result, return_type):</span><br><span class="line">            raise RuntimeError(&quot;&#123;&#125; should return &#123;&#125;&quot;.format(f.__name__, return_type.__name__))</span><br><span class="line">        return result</span><br><span class="line">    return wrapper</span><br></pre></td></tr></table></figure></p>
+<p>Now, the gcd.py is going to be like this:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">from _type_check import typecheck</span><br><span class="line"></span><br><span class="line">@typecheck</span><br><span class="line">def gcd(a: float, b: float) -&gt; int:</span><br><span class="line">    &apos;&apos;&apos;Return the greatest common divisor of a and b.&apos;&apos;&apos;</span><br><span class="line">    a = abs(a)</span><br><span class="line">    b = abs(b)</span><br><span class="line">    if a &lt; b:</span><br><span class="line">        a, b = b, a</span><br><span class="line">    while b != 0:</span><br><span class="line">        a, b = b, a % b</span><br><span class="line">    return a</span><br></pre></td></tr></table></figure></p>
+<p>In the end, we create some test:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">from gcd import gcd</span><br><span class="line">gcd(2,3)</span><br><span class="line">gcd(2.2,&apos;str&apos;)</span><br></pre></td></tr></table></figure></p>
+<p>we can get the result below, which report some details about the wrong type.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">RuntimeError: error: Argument 1 to &apos;gcd&apos; has incompatible type &apos;int&apos; ; expected &apos;float&apos;</span><br><span class="line">RuntimeError: error: Argument 2 to &apos;gcd&apos; has incompatible type &apos;str&apos; ; expected &apos;float&apos;</span><br></pre></td></tr></table></figure></p>
+<h2 id="conclusion"><a href="#conclusion" class="headerlink" title="conclusion"></a>conclusion</h2><p>This method just a simple type check, which can do the basic things – comparing the annotation types with the real types and reporting the wrong messages. It is obviously that it has a lot of things to do compared with the famous type checker tool <code>mypy</code>, Such as:</p>
+<ul>
+<li>how to deal with the extra parameters</li>
+<li>how to support several types</li>
+<li>Here we use the raise RuntimeError to report the error, it means when it met the error, it will stop. Is there some better method to log the messages.</li>
+</ul>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018-03-21-decorater_type_check.html">Implementing Type Checker in Python3</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">斯沃德 (Titanssword)</a></p>
+        <p><span>发布时间:</span>2018-03-20, 19:53:01</p>
+        <p><span>最后更新:</span>2018-03-21, 02:53:01</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018-03-21-decorater_type_check.html" title="Implementing Type Checker in Python3">https://github.com/Titanssword/2018-03-21-decorater_type_check.html</a>
+            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-03-21-decorater_type_check.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018-06-20-Bloom Filter and Count-Min Sketch.html">
+                    Bloom Filter 和　Count-Min Sketch 介绍
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018-03-20-grpc.html">
+                    gRPC example in Docker
+                </a>
+            </div>
+        
+    </nav>
+
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#introduction"><span class="toc-number">1.</span> <span class="toc-text">introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#implement"><span class="toc-number">2.</span> <span class="toc-text">implement</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#conclusion"><span class="toc-number">3.</span> <span class="toc-text">conclusion</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Implementing Type Checker in Python3　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018-06-20-Bloom Filter and Count-Min Sketch.html" title="上一篇: Bloom Filter 和　Count-Min Sketch 介绍">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018-03-20-grpc.html" title="下一篇: gRPC example in Docker">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019-02-13-2018年度总结.html">2018个人年度回忆</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-09-17-Kubernetes vs Mesos vs Swarm.html">Kubernetes vs Mesos vs Swarm</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-29-Container Scheduling.html">container scheduling</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-28-borg.html">Large-scale cluster management at Google with Borg</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-optimazition_intro.html">optimazition_intro</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-Genetic Algorithm For Multi-Objective Optimization of Container Allocation.html">Genetic Algorithm for mulit-Objective Optimization of containers allocation in cloud architecture</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-13-Dynamic_Resource_Allocation_Algorithm_for_container-based_Service.html">Dynamic Resource Allocation algorithms for container-based service computing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-Consistent hashing.html">consistent hashing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-concurrent system.html">Rate Limit</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-the_world_beyond_batch_streaming_101.html">The world beyond batch Streaming 101</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Real Time Scheduling intro.html">Real time scheduling introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Bloom Filter and Count-Min Sketch.html">Bloom Filter 和　Count-Min Sketch 介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-21-decorater_type_check.html">Implementing Type Checker in Python3</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-20-grpc.html">gRPC example in Docker</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-19-dock_intro.html">Docker introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-20-Q-Digest.html">Q-Digest 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-25-GK.html">GK 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-21-time-Timer.html">Go 的定时器的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-DataSketches Research Directions.html">DataSketches Research Directions</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-mapreduce implements.html">This is the implementation of 6.824 Lab1 MapReduce</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-Introduction_Sketch_Program.html">Fast, Approximate Analysis of Big Data</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-hello-world.html">Hello World</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2024 斯沃德 (Titanssword)
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

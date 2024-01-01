@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh,english">
+<head><meta name="generator" content="Hexo 3.9.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="斯沃德 (Titanssword)">
+
+
+
+<meta name="description" content="redis 分布式算法 一致性哈希">
+<meta name="keywords" content="distributed algorithms,redis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="consistent hashing">
+<meta property="og:url" content="https://github.com/Titanssword/2018-06-21-Consistent hashing.html">
+<meta property="og:site_name" content="斯沃德的小博客">
+<meta property="og:description" content="redis 分布式算法 一致性哈希">
+<meta property="og:locale" content="zh,english">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/18e964839d1ad40010b30f049d80774c.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/d3ae3f5e86d08a90b9e9b3428143bd9a.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/6f18532a1a4d4e3a77684bc2a28638b6.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/e80583b4e6577ac91f8b160459b65d5a.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/6b11af1a98171debd46a199070a5ddc2.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/4149be5c0b296371563e8d0c2da1ed44.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/3026cda2f155165e825eefe0362b0a54.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/6acfe9313d6d68c2c4cf8bfc1a56bf95.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/305818536f291bfec6c67a3be52bdf52.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/f4cc972abd6d500976685016453dc0df.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:image" content="http://i2.51cto.com/images/blog/201805/12/cfef126f7f9dc6d5188b7d25c1a0f6f7.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+<meta property="og:updated_time" content="2018-06-21T07:49:24.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="consistent hashing">
+<meta name="twitter:description" content="redis 分布式算法 一致性哈希">
+<meta name="twitter:image" content="http://i2.51cto.com/images/blog/201805/12/18e964839d1ad40010b30f049d80774c.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="斯沃德的小博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>consistent hashing | 斯沃德的小博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: 
+    }
+</script>
+
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">斯沃德 (Titanssword)</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">keep learning, keep living, keep coding</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DataSketches/">DataSketches</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GK/">GK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go/">Go</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT/">MIT</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Priority/">Priority</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Q-digest/">Q-digest</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Real-time/">Real time</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Static-Type/">Static Type</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Stream/">Stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Summary/">Summary</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Type-Hint/">Type Hint</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Yahoo/">Yahoo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/concurrent-system/">concurrent system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/container/">container</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/contrainer/">contrainer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-processing/">data processing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-stream/">data stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/distributed-algorithms/">distributed algorithms</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/example/">example</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gRPC/">gRPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/google/">google</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quantile-problem/">quantile problem</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rate-limit/">rate limit</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/resource-allocation/">resource allocation</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/scheduling/">scheduling</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/stream-algorithm-implement/">stream algorithm implement</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sword/">sword</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/年度小结/">年度小结</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">专注于前端</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">keep learning, keep living, keep coding</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-Consistent hashing" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018-06-21-Consistent hashing.html" class="article-date">
+      <time datetime="2018-06-21T07:49:24.000Z" itemprop="datePublished">2018-06-21</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      consistent hashing
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/system/">system</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/distributed-algorithms/">distributed algorithms</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="场景描述"><a href="#场景描述" class="headerlink" title="场景描述"></a>场景描述</h2><p>假设，我们有三台缓存服务器，用于缓存图片，我们为这三台缓存服务器编号为0号、1号、2号，现在，有3万张图片需要缓存，我们希望这些图片被均匀的缓存到这3台服务器上，以便它们能够分摊缓存的压力。也就是说，我们希望每台服务器能够缓存1万张左右的图片，那么，我们应该怎样做呢？如果我们没有任何规律的将3万张图片平均的缓存在3台服务器上，可以满足我们的要求吗？可以！但是如果这样做，当我们需要访问某个缓存项时，则需要遍历3台缓存服务器，从3万个缓存项中找到我们需要访问的缓存，遍历的过程效率太低，时间太长，当我们找到需要访问的缓存项时，时长可能是不能被接收的，也就失去了缓存的意义，缓存的目的就是提高速度，改善用户体验，减轻后端服务器压力，如果每次访问一个缓存项都需要遍历所有缓存服务器的所有缓存项，想想就觉得很累，那么，我们该怎么办呢？原始的做法是对缓存项的键进行哈希，将hash后的结果对缓存服务器的数量进行取模操作，通过取模后的结果，决定缓存项将会缓存在哪一台服务器上.</p>
+<p>那么，当我们访问任意一个图片的时候，只要再次对图片名称进行上述运算，即可得出对应的图片应该存放在哪一台缓存服务器上，我们只要在这一台服务器上查找图片即可，如果图片在对应的服务器上不存在，则证明对应的图片没有被缓存，也不用再去遍历其他缓存服务器了，通过这样的方法，即可将3万张图片随机的分布到3台缓存服务器上了，而且下次访问某张图片时，直接能够判断出该图片应该存在于哪台缓存服务器上.</p>
+<p>but…</p>
+<p>如果3台缓存服务器已经不能满足我们的缓存需求，那么我们应该怎么做呢？没错，很简单，多增加两台缓存服务器不就行了，假设，我们增加了一台缓存服务器，那么缓存服务器的数量就由3台变成了4台，此时，如果仍然使用上述方法对同一张图片进行缓存，那么这张图片所在的服务器编号必定与原来3台服务器时所在的服务器编号不同，因为除数由3变为了4，被除数不变的情况下，余数肯定不同，这种情况带来的结果就是当服务器数量变动时，所有缓存的位置都要发生改变，换句话说，当服务器数量发生改变时，所有缓存在一定时间内是失效的，当应用无法从缓存中获取数据时，则会向后端服务器请求数据，同理，假设3台缓存中突然有一台缓存服务器出现了故障，无法进行缓存，那么我们则需要将故障机器移除，但是如果移除了一台缓存服务器，那么缓存服务器数量从3台变为2台，如果想要访问一张图片，这张图片的缓存位置必定会发生改变，以前缓存的图片也会失去缓存的作用与意义，由于大量缓存在同一时间失效，造成了缓存的雪崩，此时前端缓存已经无法起到承担部分压力的作用，后端服务器将会承受巨大的压力，整个系统很有可能被压垮，所以，我们应该想办法不让这种情况发生，但是由于上述HASH算法本身的缘故，使用取模法进行缓存时，这种情况是无法避免的，为了解决这些问题，一致性哈希算法诞生了</p>
+<h2 id="一致性哈希算法"><a href="#一致性哈希算法" class="headerlink" title="一致性哈希算法"></a>一致性哈希算法</h2><p>Consistent hashing 算法早在1997年就在论文《Consistent hashing and random trees》中提出</p>
+<p>这个算法有一个环形hash空间的概念，我们先来了解一下环形hash空间：</p>
+<p>通常hash算法都是将value映射在一个32位的key值当中，那么把数轴首尾相接就会形成一个圆形，取值范围为0 ~ 2^32-1，这个圆形就是环形hash空间。如下图:</p>
+<p><img src="http://i2.51cto.com/images/blog/201805/12/18e964839d1ad40010b30f049d80774c.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt><br>只考虑4个对象Object1 ~ Object4<br>首先通过hash函数计算出这四个对象的hash值key，这些对象的hash值肯定是会落在上述中的环形hash空间范围上的，对象的hash对应到环形hash空间上的哪一个key值那么该对象就映射到那个位置上，这样对象就映射到环形hash空间上了。<br><img src="http://i2.51cto.com/images/blog/201805/12/d3ae3f5e86d08a90b9e9b3428143bd9a.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt></p>
+<p>然后就是把cache映射到环形hash空间，cache就是我们的redis服务器：<br>计算出cache的hash值之后，就和对象一样映射到hash环形空间中对应的key上<br><img src="http://i2.51cto.com/images/blog/201805/12/6f18532a1a4d4e3a77684bc2a28638b6.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt><br>可以看到，Cache和Obejct都映射到这个环形hash空间中了，那么接下来要考虑的就是如何将object映射到cache中。其实在这个环形hash空间进行一个顺时针的计算即可，例如key1顺时针遇到的第一个cache是cacheA，所以就将key1映射到cacheA中，key2顺时针遇到的第一个cache是cacheC，那么就将key2映射到cacheC中，以此类推。<br><img src="http://i2.51cto.com/images/blog/201805/12/e80583b4e6577ac91f8b160459b65d5a.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt></p>
+<p>如果某一个cache被移除之后，那么object会继续顺时针寻找下一个cache进行映射。例如，cacheB被移除了，映射在cacheB中的object4就会顺时针往下找到cacheC，然后映射到cacheC上。<br><img src="http://i2.51cto.com/images/blog/201805/12/6b11af1a98171debd46a199070a5ddc2.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt><br>所以当移除一个cacheB时所影响的object范围就是cacheB与cacheA之间的那一段范围，这个范围是比较小的。如下图所标出的范围：<br><img src="http://i2.51cto.com/images/blog/201805/12/4149be5c0b296371563e8d0c2da1ed44.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt></p>
+<p>而当增加一个cache节点时也是同理，例如，在acheC和cacheB之间增加了一个cacheD节点，那么object2在顺时针遇到的第一个cache就是cacheD，此时就会将obejct2映射到cacheD中。如下图：<br><img src="http://i2.51cto.com/images/blog/201805/12/3026cda2f155165e825eefe0362b0a54.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt><br>同样的，增加cache节点所影响的范围也就是cacheD和cacheB之间的那一段范围。如下图所标出的范围：<br><img src="http://i2.51cto.com/images/blog/201805/12/6acfe9313d6d68c2c4cf8bfc1a56bf95.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt></p>
+<p>我们假设了所有的cache节点都是在环形hash空间上分布均匀的,</p>
+<p>but…</p>
+<p>现实中，就有可能会出现cache节点无法均匀的分部在环形hash空间上<br><img src="http://i2.51cto.com/images/blog/201805/12/305818536f291bfec6c67a3be52bdf52.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt><br>可以看到，A、B、C节点都挤在了一块，按顺时针来计算，就会有大量的数据（object）映射到A节点上，从上图中来看就会有一大半的数据都映射到A节点上，那么A节点所承载的数据压力会十分大，B、C节点则无法得到很好的利用，几乎等同闲着没事干。这就是Hash倾斜性所导致的现象，无法保证在环形hash空间上绝对的分布均匀。</p>
+<p>为了解决Hash倾斜性的问题，redis引入了虚拟节点的概念，虚拟节点相当于是实际节点的一个影子或者说分身，而且虚拟节点一般都比实际节点的数量要多。引入虚拟节点后，object不再直接映射到实际的cache节点中，而是先映射到虚拟节点中。然后虚拟节点会再进行一个hash计算，最后才映射到实际的cache节点中。所以虚拟节点就是对我们的实际节点进行一个放大，如下图：<br><img src="http://i2.51cto.com/images/blog/201805/12/f4cc972abd6d500976685016453dc0df.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt><br>放到环形hash空间上进行表示，就是这样的，浅色为虚拟节点，深色为实际节点：<br><img src="http://i2.51cto.com/images/blog/201805/12/cfef126f7f9dc6d5188b7d25c1a0f6f7.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_100,g_se,x_10,y_10,shadow_90,type_ZmFuZ3poZW5naGVpdGk=" alt><br>如上可以看到，这下分布就均匀了。这里只是作为演示，实际情况中的节点会更多，虚拟节点和实际节点是存在一定比例的。而且随着实际节点的增加，环形hash空间上的分布就会越来越均匀，当移除或增加cache时所受到的影响就会越小。</p>
+<p>Consistent hashing 命中率计算公式：</p>
+<p>(1 - n / (n + m)) * 100%<br>n = 现有的节点数量<br>m = 新增的节点数量</p>
+<h2 id="Ref"><a href="#Ref" class="headerlink" title="Ref"></a>Ref</h2><p><a href="http://blog.51cto.com/zero01/2115528" target="_blank" rel="noopener">http://blog.51cto.com/zero01/2115528</a></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018-06-21-Consistent hashing.html">consistent hashing</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">斯沃德 (Titanssword)</a></p>
+        <p><span>发布时间:</span>2018-06-21, 09:49:24</p>
+        <p><span>最后更新:</span>2018-06-21, 15:49:24</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018-06-21-Consistent hashing.html" title="consistent hashing">https://github.com/Titanssword/2018-06-21-Consistent hashing.html</a>
+            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-06-21-Consistent hashing.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018-07-13-Dynamic_Resource_Allocation_Algorithm_for_container-based_Service.html">
+                    Dynamic Resource Allocation algorithms for container-based service computing
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018-06-21-concurrent system.html">
+                    Rate Limit
+                </a>
+            </div>
+        
+    </nav>
+
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#场景描述"><span class="toc-number">1.</span> <span class="toc-text">场景描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一致性哈希算法"><span class="toc-number">2.</span> <span class="toc-text">一致性哈希算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Ref"><span class="toc-number">3.</span> <span class="toc-text">Ref</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"consistent hashing　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018-07-13-Dynamic_Resource_Allocation_Algorithm_for_container-based_Service.html" title="上一篇: Dynamic Resource Allocation algorithms for container-based service computing">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018-06-21-concurrent system.html" title="下一篇: Rate Limit">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019-02-13-2018年度总结.html">2018个人年度回忆</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-09-17-Kubernetes vs Mesos vs Swarm.html">Kubernetes vs Mesos vs Swarm</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-29-Container Scheduling.html">container scheduling</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-28-borg.html">Large-scale cluster management at Google with Borg</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-optimazition_intro.html">optimazition_intro</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-Genetic Algorithm For Multi-Objective Optimization of Container Allocation.html">Genetic Algorithm for mulit-Objective Optimization of containers allocation in cloud architecture</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-13-Dynamic_Resource_Allocation_Algorithm_for_container-based_Service.html">Dynamic Resource Allocation algorithms for container-based service computing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-Consistent hashing.html">consistent hashing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-concurrent system.html">Rate Limit</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-the_world_beyond_batch_streaming_101.html">The world beyond batch Streaming 101</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Real Time Scheduling intro.html">Real time scheduling introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Bloom Filter and Count-Min Sketch.html">Bloom Filter 和　Count-Min Sketch 介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-21-decorater_type_check.html">Implementing Type Checker in Python3</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-20-grpc.html">gRPC example in Docker</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-19-dock_intro.html">Docker introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-20-Q-Digest.html">Q-Digest 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-25-GK.html">GK 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-21-time-Timer.html">Go 的定时器的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-DataSketches Research Directions.html">DataSketches Research Directions</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-mapreduce implements.html">This is the implementation of 6.824 Lab1 MapReduce</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-Introduction_Sketch_Program.html">Fast, Approximate Analysis of Big Data</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-hello-world.html">Hello World</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2024 斯沃德 (Titanssword)
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

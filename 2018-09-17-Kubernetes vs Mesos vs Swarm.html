@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh,english">
+<head><meta name="generator" content="Hexo 3.9.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="斯沃德 (Titanssword)">
+
+
+
+<meta name="description" content="A Look at Major Container Orchestration Engines">
+<meta name="keywords" content="container,scheduling">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes vs Mesos vs Swarm">
+<meta property="og:url" content="https://github.com/Titanssword/2018-09-17-Kubernetes vs Mesos vs Swarm.html">
+<meta property="og:site_name" content="斯沃德的小博客">
+<meta property="og:description" content="A Look at Major Container Orchestration Engines">
+<meta property="og:locale" content="zh,english">
+<meta property="og:updated_time" content="2018-09-17T03:47:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kubernetes vs Mesos vs Swarm">
+<meta name="twitter:description" content="A Look at Major Container Orchestration Engines">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="斯沃德的小博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Kubernetes vs Mesos vs Swarm | 斯沃德的小博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: 
+    }
+</script>
+
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">斯沃德 (Titanssword)</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">keep learning, keep living, keep coding</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/DataSketches/">DataSketches</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GK/">GK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go/">Go</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT/">MIT</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Priority/">Priority</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Q-digest/">Q-digest</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Real-time/">Real time</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Static-Type/">Static Type</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Stream/">Stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Summary/">Summary</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Type-Hint/">Type Hint</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Yahoo/">Yahoo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/concurrent-system/">concurrent system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/container/">container</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/contrainer/">contrainer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-processing/">data processing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/data-stream/">data stream</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/distributed-algorithms/">distributed algorithms</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/example/">example</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gRPC/">gRPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/google/">google</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quantile-problem/">quantile problem</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rate-limit/">rate limit</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/resource-allocation/">resource allocation</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/scheduling/">scheduling</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/stream-algorithm-implement/">stream algorithm implement</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sword/">sword</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/年度小结/">年度小结</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">专注于前端</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://avatars0.githubusercontent.com/u/9337319?s=400&amp;u=195b7aa90f11fc97e3fa402dbe4f4d0c72aa2ff2&amp;v=4" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">斯沃德 (Titanssword)</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">keep learning, keep living, keep coding</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="/1776904419@qq.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-Kubernetes vs Mesos vs Swarm" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018-09-17-Kubernetes vs Mesos vs Swarm.html" class="article-date">
+      <time datetime="2018-09-17T03:47:13.000Z" itemprop="datePublished">2018-09-17</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Kubernetes vs Mesos vs Swarm
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/container-technologies/">container technologies</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/container/">container</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/scheduling/">scheduling</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>如果您正在阅读本文，您可能会问自己什么是容器编排引擎，它们解决了哪些问题，以及它们之间的区别。本文将尝试对Kubernetes，Docker Swarm和Apache Mesos进行high-level overview，以及它们的一些显着的相似点和不同点。</p>
+<h2 id="Container-Orchestration-Engines"><a href="#Container-Orchestration-Engines" class="headerlink" title="Container Orchestration Engines"></a>Container Orchestration Engines</h2><p>虽然定义各不相同，但Kubernetes，Docker和Swarm都属于一类DevOps基础架构管理工具，称为Container Orchestration Engines（COE）。 COE在资源池和在这些资源上运行的应用程序容器之间提供抽象层。</p>
+<p>与容器一起，COE解决的主要问题是如何在云或数据中心中采用多个离散资源，并将它们组合到一个池中，可以在其上部署各种应用程序。这些应用程序的范围可以从简单的三层Web体系结构到大规模数据摄取和处理，以及介于两者之间的所有内容。<br>这些工具中的每一个都提供不同的功能集，并且在成熟度，学习曲线和易用性方面各不相同。他们可以共享的一些高级功能包括：</p>
+<ul>
+<li>Container scheduling — 其中包括执行启动和停止容器等功能;在集合资源中分配容器;收回失败的容器;将容器从故障主机重新平衡到健康主机，并通过容器扩展应用程序，无论是手动还是自动。</li>
+<li>High availability — 应用程序和容器，或编排系统本身的高可用性。</li>
+<li>Health checks — 确定容器或应用程序运行的健康性检测</li>
+<li>Service discovery — 其用于确定分布式计算架构中的各种服务在网络上的位置。</li>
+<li>Load Balancing requests — 无论是在集群内部生成还是从外部客户端生成的请求的负载均衡</li>
+<li>将各种类型（网络，本地）存储附加到群集中的容器。</li>
+</ul>
+<p>NOTE，此列表并非详尽无遗，而是表示编排引擎提供的某些高级服务。值得一提的是，虽然这里讨论的每个工具都会在某种程度上执行这些功能，但实现方式可能会有很大差异。</p>
+<h2 id="Kubernetes-Container-Orchestration-Capabilities"><a href="#Kubernetes-Container-Orchestration-Capabilities" class="headerlink" title="Kubernetes Container Orchestration Capabilities"></a>Kubernetes Container Orchestration Capabilities</h2><p>Kubernetes（也称为“k8s”）于2014年6月首次发布，用Go编写。从古希腊语翻译，Kubernetes这个词的意思是“舵手。”该项目起源于谷歌开源，并且基于他们大规模运行容器的经验。</p>
+<p>在功能方面，它可能是本文中检查的三个选项中最本地集成的。 Kubernetes使用非常广泛，背后有一个庞大的社区。 Google将Kubernetes用于自己的Container as a Service（CaaS）产品，称为Google Container Engine（GKE）。还有许多其他平台支持Kubernetes，包括Red Hat OpenShift和Microsoft Azure。</p>
+<p>Docker是目前由Kubernetes支持的最普遍的容器引擎，但也支持CoreOS rkt（发音为“rocket”）。</p>
+<p>Kubernetes使用基于YAML的部署模型。除了在主机上调度容器之外，Kubernetes还提供许多其他功能。</p>
+<p>主要功能包括内置自动扩展，负载平衡，卷管理和秘密管理。此外，还有一个Web UI可帮助管理和排除群集故障。通过包含这些功能，Kubernetes通常比Swarm或Mesos需要更少的第三方软件。</p>
+<p>将Kubernetes与Swarm和Mesos区分开来的还是“pods”的概念，它是一组容器，它们被组合在一起构成Kubernetes术语中的“服务”。</p>
+<p>虽然可以将Kubernetes主服务器配置为高可用性集群，但这不像单节点主服务器那样受支持，并且是Kubernetes的高级用例。</p>
+<p>Kubernetes的学习曲线有些陡峭，并且可以比Swarm更加努力地配置。部分由于其功能更紧密的集成，Kubernetes有时被认为比这里讨论的其他两个编排引擎更“opinionated”。</p>
+<h2 id="Swarm-Container-Orchestration-Capabilities"><a href="#Swarm-Container-Orchestration-Capabilities" class="headerlink" title="Swarm Container Orchestration Capabilities"></a>Swarm Container Orchestration Capabilities</h2><p>Docker Swarm是Docker的本机Container Orchestration Engine。最初于2015年11月发布，它也是用Go编写的。 Swarmkit是版本1.12中包含的Swarm的Docker本机版本，对于那些希望使用Swarm的人来说，这是Docker的推荐版本。</p>
+<p>Swarm与Docker API紧密集成，非常适合与Docker一起使用。适用于单个主机泊坞窗群集的相同原语与Swarm一起使用。这可以简化容器基础架构的管理，因为不需要配置单独的编排引擎，也不需要重新学习Docker概念才能使用Swarm。</p>
+<p>与Kubernetes一样，Swarm有一个使用Docker Compose的基于YAML的部署模型。其他值得注意的功能包括群集自动修复，使用DNS覆盖网络，通过使用多个主服务器实现高可用性，以及使用带有证书颁发机构的TLS进行网络安全。</p>
+<p>在撰写本文时，Swarm尚不支持本机自动缩放或外部负载平衡。扩展必须手动完成或通过第三方解决方案完成。同样，Swarm包括入口负载平衡，但外部负载平衡将通过使用第三方负载平衡器（如AWS ELB）完成。另外值得注意的是缺少Swarm的Web界面。</p>
+<h2 id="Mesos-Container-Orchestration-Capabilities"><a href="#Mesos-Container-Orchestration-Capabilities" class="headerlink" title="Mesos Container Orchestration Capabilities"></a>Mesos Container Orchestration Capabilities</h2><p>Apache Mesos 1.0版本于2016年7月发布，但它的历史可以追溯到2009年，当时它最初是由加州大学伯克利分校的博士生开发的。与Swarm和Kubernetes不同，Mesos是用C ++编写的。</p>
+<p>Mesos与前面提到的前两个有些不同，因为它需要更多的分布式方法来管理数据中心和云资源。 Mesos可以拥有多个主服务器，这些主服务器使用Zookeeper来跟踪主服务器中的集群状态，并形成高可用性集群。</p>
+<p>其他容器管理框架可以在Mesos上运行，包括Kubernetes，Apache Aurora，Chronos和Mesosphere Marathon。此外，Mesosphere DC / OS是一个分布式数据中心操作系统，基于Apache Mesos。</p>
+<p>这意味着Mesos采用更加模块化的方法来管理容器，允许用户在应用程序类型和运行规模方面具有更大的灵活性。</p>
+<p>Mesos可以扩展到数万个节点，并被Twitter，Airbnb，Yelp和eBay等用户使用。 Apple甚至拥有自己的基于Mesos的专有框架，名为Jarvis，用于驱动Siri。</p>
+<p>Mesos中可用的一些值得一提的功能是支持多种类型的容器引擎，包括Docker及其自己的“Containerizer”，以及Web UI，以及在多个操作系统上运行的能力，包括Linux，OS X，甚至是Windows。</p>
+<p>由于其复杂性和灵活性，Mesos拥有比Docker Swarm更陡峭的学习曲线。但是，同样的灵活性和复杂性也是允许像Twitter和Airbnb这样的公司使用Mesos来管理其大规模应用程序的优势。</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>如果您只是想要使用编排引擎启动并运行并测试，那么Doc​​ker Swarm可能是一个不错的选择。当你准备深入研究这个主题，或者可能部署一些倾向于工业级的东西时，请看看Kubernetes。如果灵活性和大规模是您的目标，那么请考虑Apache Mesos。</p>
+<p>本文翻译<a href="https://www.sumologic.com/devops/kubernetes-vs-mesos-vs-swarm/" target="_blank" rel="noopener">这篇文章</a>, 如有侵权请告知。</p>
+<p>When you’re ready to learn a bit more, take a look at Comparison of Container Schedulers, and <a href="http://rancher.com/comparing-rancher-orchestration-engine-options/" target="_blank" rel="noopener">Kubernetes, Mesos, and Swarm: Comparing the Rancher Orchestration Engine Options.</a></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018-09-17-Kubernetes vs Mesos vs Swarm.html">Kubernetes vs Mesos vs Swarm</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">斯沃德 (Titanssword)</a></p>
+        <p><span>发布时间:</span>2018-09-17, 05:47:13</p>
+        <p><span>最后更新:</span>2018-09-17, 11:47:13</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018-09-17-Kubernetes vs Mesos vs Swarm.html" title="Kubernetes vs Mesos vs Swarm">https://github.com/Titanssword/2018-09-17-Kubernetes vs Mesos vs Swarm.html</a>
+            <span class="copy-path" data-clipboard-text="原文: https://github.com/Titanssword/2018-09-17-Kubernetes vs Mesos vs Swarm.html　　作者: 斯沃德 (Titanssword)" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019-02-13-2018年度总结.html">
+                    2018个人年度回忆
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018-08-29-Container Scheduling.html">
+                    container scheduling
+                </a>
+            </div>
+        
+    </nav>
+
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Container-Orchestration-Engines"><span class="toc-number">2.</span> <span class="toc-text">Container Orchestration Engines</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Kubernetes-Container-Orchestration-Capabilities"><span class="toc-number">3.</span> <span class="toc-text">Kubernetes Container Orchestration Capabilities</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Swarm-Container-Orchestration-Capabilities"><span class="toc-number">4.</span> <span class="toc-text">Swarm Container Orchestration Capabilities</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Mesos-Container-Orchestration-Capabilities"><span class="toc-number">5.</span> <span class="toc-text">Mesos Container Orchestration Capabilities</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Conclusion"><span class="toc-number">6.</span> <span class="toc-text">Conclusion</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Kubernetes vs Mesos vs Swarm　| 斯沃德的小博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019-02-13-2018年度总结.html" title="上一篇: 2018个人年度回忆">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018-08-29-Container Scheduling.html" title="下一篇: container scheduling">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019-02-13-2018年度总结.html">2018个人年度回忆</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-09-17-Kubernetes vs Mesos vs Swarm.html">Kubernetes vs Mesos vs Swarm</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-29-Container Scheduling.html">container scheduling</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-08-28-borg.html">Large-scale cluster management at Google with Borg</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-optimazition_intro.html">optimazition_intro</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-23-Genetic Algorithm For Multi-Objective Optimization of Container Allocation.html">Genetic Algorithm for mulit-Objective Optimization of containers allocation in cloud architecture</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-07-13-Dynamic_Resource_Allocation_Algorithm_for_container-based_Service.html">Dynamic Resource Allocation algorithms for container-based service computing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-Consistent hashing.html">consistent hashing</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-21-concurrent system.html">Rate Limit</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-the_world_beyond_batch_streaming_101.html">The world beyond batch Streaming 101</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Real Time Scheduling intro.html">Real time scheduling introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-06-20-Bloom Filter and Count-Min Sketch.html">Bloom Filter 和　Count-Min Sketch 介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-21-decorater_type_check.html">Implementing Type Checker in Python3</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-20-grpc.html">gRPC example in Docker</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-03-19-dock_intro.html">Docker introduction</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-02-20-Q-Digest.html">Q-Digest 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-25-GK.html">GK 算法简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-21-time-Timer.html">Go 的定时器的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-DataSketches Research Directions.html">DataSketches Research Directions</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-mapreduce implements.html">This is the implementation of 6.824 Lab1 MapReduce</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-Introduction_Sketch_Program.html">Fast, Approximate Analysis of Big Data</a></li><li class="post-list-item"><a class="post-list-link" href="/2018-01-20-hello-world.html">Hello World</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2024 斯沃德 (Titanssword)
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
